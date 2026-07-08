@@ -1,0 +1,2 @@
+- [CV Builder migration](cv-builder-migration.md) — full-stack CV app migrated from ZIP; body-parser limit and BASE_PATH defaulting are critical gotchas.
+- [DB declarations must be rebuilt](db-declarations-rebuild.md) — after adding new Drizzle schema files, must run `pnpm -w exec tsc --build lib/db` so api-server sees new exports.

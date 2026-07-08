@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Generador de CV"
+version = "1.0.0"
+id = "artifacts/cv-generator"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24743
+
+[services.development]
+run = "pnpm --filter @workspace/cv-generator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cv-generator", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/cv-generator/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24743"
+BASE_PATH = "/"
