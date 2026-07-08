@@ -1,45 +1,59 @@
-# [Project name]
+# CVCraft — CV Builder
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A full-stack CV/resume builder app. Users can create, edit, and manage professional CVs with multiple templates and colour themes.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/cv-generator run dev` — run the frontend (Vite dev server)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (Express)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` — auto-provided by Replit's built-in PostgreSQL
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Frontend: React + Vite, Tailwind CSS, shadcn/ui, TanStack Query, Wouter
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
+- DB: PostgreSQL (Replit built-in) + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- API codegen: Orval (from OpenAPI spec in `lib/api-spec/openapi.yaml`)
+- Build: esbuild (CJS bundle for API server)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/cv-generator/` — React + Vite frontend
+- `artifacts/api-server/` — Express API server
+- `lib/db/src/schema/resumes.ts` — DB schema (source of truth)
+- `lib/api-spec/openapi.yaml` — OpenAPI spec (source of truth for API contracts)
+- `lib/api-client-react/` — generated React Query hooks
+- `lib/api-zod/` — generated Zod schemas
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- OpenAPI-first: all API contracts defined in `lib/api-spec/openapi.yaml`; frontend hooks and Zod schemas are generated via Orval.
+- Body parser limit set to `10mb` to support photo uploads in resume data.
+- `DATABASE_URL` is runtime-managed by Replit — do not set it manually.
+- After adding new Drizzle schema files, run `pnpm -w exec tsc --build lib/db` so api-server picks up new exports.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Dashboard: list and manage all CVs
+- Template picker: choose a resume template and accent colour
+- Editor: fill in personal info, work experience, education, skills, and languages
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Wants to push to GitHub after the app is working on Replit.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- After editing `lib/db` schema, rebuild with `pnpm -w exec tsc --build lib/db` before restarting the API server.
+- `DATABASE_URL` is a runtime-managed key — Replit injects it automatically; do not set it via `setEnvVars`.
+- The `attached_assets/CV-Builder/` directory contains a stale copy of the project from the original ZIP import — it can be deleted.
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
