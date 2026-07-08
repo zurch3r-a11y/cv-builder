@@ -80,56 +80,12 @@ export default function Editor() {
   const handleDownloadPDF = useCallback(async () => {
     if (!resumeData) return;
     setPdfLoading(true);
+
     // Render the CV template into an off-screen div to avoid any
     // overflow-clipping or scrollable-container capture issues.
     const container = document.createElement("div");
     container.style.cssText =
       "position:fixed;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;";
-
-    // html2canvas cannot parse oklch() (Tailwind v4's default color format).
-    // Override every Tailwind CSS color token with an sRGB hex equivalent so
-    // the canvas renderer sees only colors it understands.
-    const compat = document.createElement("style");
-    compat.textContent = `
-      /* Tailwind v4 color token overrides — hex equivalents for html2canvas */
-      *, *::before, *::after {
-        --color-white: #ffffff;
-        --color-black: #000000;
-        --color-transparent: transparent;
-        --color-gray-50:  #f9fafb; --color-gray-100: #f3f4f6;
-        --color-gray-200: #e5e7eb; --color-gray-300: #d1d5db;
-        --color-gray-400: #9ca3af; --color-gray-500: #6b7280;
-        --color-gray-600: #4b5563; --color-gray-700: #374151;
-        --color-gray-800: #1f2937; --color-gray-900: #111827;
-        --color-zinc-50:  #fafafa; --color-zinc-100: #f4f4f5;
-        --color-zinc-200: #e4e4e7; --color-zinc-300: #d4d4d8;
-        --color-zinc-400: #a1a1aa; --color-zinc-500: #71717a;
-        --color-zinc-600: #52525b; --color-zinc-700: #3f3f46;
-        --color-zinc-800: #27272a; --color-zinc-900: #18181b;
-        --color-slate-50:  #f8fafc; --color-slate-100: #f1f5f9;
-        --color-slate-200: #e2e8f0; --color-slate-300: #cbd5e1;
-        --color-slate-400: #94a3b8; --color-slate-500: #64748b;
-        --color-slate-600: #475569; --color-slate-700: #334155;
-        --color-slate-800: #1e293b; --color-slate-900: #0f172a;
-        --color-red-50:  #fef2f2; --color-red-100: #fee2e2;
-        --color-red-200: #fecaca; --color-red-400: #f87171;
-        --color-red-500: #ef4444; --color-red-600: #dc2626;
-        --color-red-700: #b91c1c; --color-red-800: #991b1b;
-        --color-red-900: #7f1d1d;
-        --color-blue-50:  #eff6ff; --color-blue-100: #dbeafe;
-        --color-blue-200: #bfdbfe; --color-blue-400: #60a5fa;
-        --color-blue-500: #3b82f6; --color-blue-600: #2563eb;
-        --color-blue-700: #1d4ed8; --color-blue-800: #1e40af;
-        --color-blue-900: #1e3a8a;
-        --color-green-50:  #f0fdf4; --color-green-500: #22c55e;
-        --color-green-600: #16a34a; --color-green-700: #15803d;
-        --color-purple-500: #a855f7; --color-purple-600: #9333ea;
-        --color-teal-500: #14b8a6;  --color-teal-600: #0d9488;
-        --color-orange-500: #f97316; --color-orange-600: #ea580c;
-        --color-rose-500: #f43f5e;  --color-rose-600: #e11d48;
-      }
-    `;
-    container.appendChild(compat);
     document.body.appendChild(container);
 
     const TemplateMap: Record<string, React.ComponentType<{ data: ResumeData; accentColor: string }>> = {
@@ -156,6 +112,54 @@ export default function Editor() {
         width: 794,
         height: container.scrollHeight,
         windowWidth: 794,
+        // html2canvas parses every <style> element's raw text and crashes on
+        // oklch() (Tailwind v4's native color format). Use onclone to rewrite
+        // every oklch(...) to a hex string via proper color-space math before
+        // the canvas renderer sees the stylesheet.
+        onclone: (_clonedDoc: Document, element: HTMLElement) => {
+          const oklchToHex = (l: number, c: number, h: number): string => {
+            // oklch → oklab
+            const hRad = (h * Math.PI) / 180;
+            const a = c * Math.cos(hRad);
+            const b = c * Math.sin(hRad);
+            // oklab → linear sRGB (via LMS)
+            const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+            const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+            const s_ = l - 0.0894841775 * a - 1.2914855480 * b;
+            const L3 = l_ ** 3, M3 = m_ ** 3, S3 = s_ ** 3;
+            let r =  4.0767416621 * L3 - 3.3077115913 * M3 + 0.2309699292 * S3;
+            let g = -1.2684380046 * L3 + 2.6097574011 * M3 - 0.3413193965 * S3;
+            let bv = -0.0041960863 * L3 - 0.7034186147 * M3 + 1.7076147010 * S3;
+            // linear → gamma-encoded sRGB
+            const gamma = (x: number) => {
+              x = Math.max(0, Math.min(1, x));
+              return x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
+            };
+            const ri = Math.round(gamma(r) * 255);
+            const gi = Math.round(gamma(g) * 255);
+            const bi = Math.round(gamma(bv) * 255);
+            return `#${ri.toString(16).padStart(2, "0")}${gi.toString(16).padStart(2, "0")}${bi.toString(16).padStart(2, "0")}`;
+          };
+
+          const patchText = (css: string) =>
+            css.replace(
+              /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)/g,
+              (_m, ls, cs, hs, as) => {
+                const hex = oklchToHex(+ls, +cs, +hs);
+                if (as !== undefined) {
+                  // oklch with alpha → hex8
+                  const alpha = Math.round(Math.max(0, Math.min(1, +as)) * 255);
+                  return `${hex}${alpha.toString(16).padStart(2, "0")}`;
+                }
+                return hex;
+              }
+            );
+
+          // Patch every <style> tag in the cloned document
+          element.ownerDocument.querySelectorAll("style").forEach((s) => {
+            s.textContent = patchText(s.textContent ?? "");
+          });
+        },
       });
 
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
