@@ -85,6 +85,51 @@ export default function Editor() {
     const container = document.createElement("div");
     container.style.cssText =
       "position:fixed;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;";
+
+    // html2canvas cannot parse oklch() (Tailwind v4's default color format).
+    // Override every Tailwind CSS color token with an sRGB hex equivalent so
+    // the canvas renderer sees only colors it understands.
+    const compat = document.createElement("style");
+    compat.textContent = `
+      /* Tailwind v4 color token overrides — hex equivalents for html2canvas */
+      *, *::before, *::after {
+        --color-white: #ffffff;
+        --color-black: #000000;
+        --color-transparent: transparent;
+        --color-gray-50:  #f9fafb; --color-gray-100: #f3f4f6;
+        --color-gray-200: #e5e7eb; --color-gray-300: #d1d5db;
+        --color-gray-400: #9ca3af; --color-gray-500: #6b7280;
+        --color-gray-600: #4b5563; --color-gray-700: #374151;
+        --color-gray-800: #1f2937; --color-gray-900: #111827;
+        --color-zinc-50:  #fafafa; --color-zinc-100: #f4f4f5;
+        --color-zinc-200: #e4e4e7; --color-zinc-300: #d4d4d8;
+        --color-zinc-400: #a1a1aa; --color-zinc-500: #71717a;
+        --color-zinc-600: #52525b; --color-zinc-700: #3f3f46;
+        --color-zinc-800: #27272a; --color-zinc-900: #18181b;
+        --color-slate-50:  #f8fafc; --color-slate-100: #f1f5f9;
+        --color-slate-200: #e2e8f0; --color-slate-300: #cbd5e1;
+        --color-slate-400: #94a3b8; --color-slate-500: #64748b;
+        --color-slate-600: #475569; --color-slate-700: #334155;
+        --color-slate-800: #1e293b; --color-slate-900: #0f172a;
+        --color-red-50:  #fef2f2; --color-red-100: #fee2e2;
+        --color-red-200: #fecaca; --color-red-400: #f87171;
+        --color-red-500: #ef4444; --color-red-600: #dc2626;
+        --color-red-700: #b91c1c; --color-red-800: #991b1b;
+        --color-red-900: #7f1d1d;
+        --color-blue-50:  #eff6ff; --color-blue-100: #dbeafe;
+        --color-blue-200: #bfdbfe; --color-blue-400: #60a5fa;
+        --color-blue-500: #3b82f6; --color-blue-600: #2563eb;
+        --color-blue-700: #1d4ed8; --color-blue-800: #1e40af;
+        --color-blue-900: #1e3a8a;
+        --color-green-50:  #f0fdf4; --color-green-500: #22c55e;
+        --color-green-600: #16a34a; --color-green-700: #15803d;
+        --color-purple-500: #a855f7; --color-purple-600: #9333ea;
+        --color-teal-500: #14b8a6;  --color-teal-600: #0d9488;
+        --color-orange-500: #f97316; --color-orange-600: #ea580c;
+        --color-rose-500: #f43f5e;  --color-rose-600: #e11d48;
+      }
+    `;
+    container.appendChild(compat);
     document.body.appendChild(container);
 
     const TemplateMap: Record<string, React.ComponentType<{ data: ResumeData; accentColor: string }>> = {
@@ -99,7 +144,7 @@ export default function Editor() {
     root.render(<TemplateComponent data={resumeData} accentColor={accentColor} />);
 
     // Give React a moment to paint
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 400));
 
     try {
       const canvas = await html2canvas(container, {
