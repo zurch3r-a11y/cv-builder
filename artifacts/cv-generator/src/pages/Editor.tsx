@@ -141,19 +141,58 @@ export default function Editor() {
             return `#${ri.toString(16).padStart(2, "0")}${gi.toString(16).padStart(2, "0")}${bi.toString(16).padStart(2, "0")}`;
           };
 
+          // Convert oklab(L a b) → hex
+          const oklabToHex = (l: number, a: number, b: number): string => {
+            const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+            const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+            const s_ = l - 0.0894841775 * a - 1.2914855480 * b;
+            const L3 = l_ ** 3, M3 = m_ ** 3, S3 = s_ ** 3;
+            let r  =  4.0767416621 * L3 - 3.3077115913 * M3 + 0.2309699292 * S3;
+            let g  = -1.2684380046 * L3 + 2.6097574011 * M3 - 0.3413193965 * S3;
+            let bv = -0.0041960863 * L3 - 0.7034186147 * M3 + 1.7076147010 * S3;
+            const gamma = (x: number) => {
+              x = Math.max(0, Math.min(1, x));
+              return x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
+            };
+            const ri = Math.round(gamma(r) * 255);
+            const gi = Math.round(gamma(g) * 255);
+            const bi = Math.round(gamma(bv) * 255);
+            return `#${ri.toString(16).padStart(2, "0")}${gi.toString(16).padStart(2, "0")}${bi.toString(16).padStart(2, "0")}`;
+          };
+
+          // Number token: integers, decimals, percentages (strips %)
+          const num = `([+-]?[\\d.]+%?)`;
+          // Optional alpha: "/ 0.5" or "/ 50%"
+          const alpha = `(?:\\s*/\\s*${num})?`;
+
           const patchText = (css: string) =>
-            css.replace(
-              /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)/g,
-              (_m, ls, cs, hs, as) => {
-                const hex = oklchToHex(+ls, +cs, +hs);
-                if (as !== undefined) {
-                  // oklch with alpha → hex8
-                  const alpha = Math.round(Math.max(0, Math.min(1, +as)) * 255);
-                  return `${hex}${alpha.toString(16).padStart(2, "0")}`;
+            css
+              // oklch(L C H) and oklch(L C H / alpha)
+              .replace(
+                new RegExp(`oklch\\(\\s*${num}\\s+${num}\\s+${num}\\s*${alpha}\\s*\\)`, "g"),
+                (_m, ls, cs, hs, as) => {
+                  const parse = (v: string) => v.endsWith("%") ? +v.slice(0,-1)/100 : +v;
+                  const hex = oklchToHex(parse(ls), parse(cs), parse(hs));
+                  if (as !== undefined) {
+                    const a = Math.round(Math.max(0, Math.min(1, parse(as))) * 255);
+                    return `${hex}${a.toString(16).padStart(2, "0")}`;
+                  }
+                  return hex;
                 }
-                return hex;
-              }
-            );
+              )
+              // oklab(L a b) and oklab(L a b / alpha)
+              .replace(
+                new RegExp(`oklab\\(\\s*${num}\\s+${num}\\s+${num}\\s*${alpha}\\s*\\)`, "g"),
+                (_m, ls, as2, bs, alphas) => {
+                  const parse = (v: string) => v.endsWith("%") ? +v.slice(0,-1)/100 : +v;
+                  const hex = oklabToHex(parse(ls), parse(as2), parse(bs));
+                  if (alphas !== undefined) {
+                    const a = Math.round(Math.max(0, Math.min(1, parse(alphas))) * 255);
+                    return `${hex}${a.toString(16).padStart(2, "0")}`;
+                  }
+                  return hex;
+                }
+              );
 
           // Patch every <style> tag in the cloned document
           element.ownerDocument.querySelectorAll("style").forEach((s) => {
