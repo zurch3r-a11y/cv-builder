@@ -117,82 +117,118 @@ export default function Editor() {
         // every oklch(...) to a hex string via proper color-space math before
         // the canvas renderer sees the stylesheet.
         onclone: (_clonedDoc: Document, element: HTMLElement) => {
-          const oklchToHex = (l: number, c: number, h: number): string => {
-            // oklch → oklab
-            const hRad = (h * Math.PI) / 180;
-            const a = c * Math.cos(hRad);
-            const b = c * Math.sin(hRad);
-            // oklab → linear sRGB (via LMS)
-            const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
-            const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
-            const s_ = l - 0.0894841775 * a - 1.2914855480 * b;
-            const L3 = l_ ** 3, M3 = m_ ** 3, S3 = s_ ** 3;
-            let r =  4.0767416621 * L3 - 3.3077115913 * M3 + 0.2309699292 * S3;
-            let g = -1.2684380046 * L3 + 2.6097574011 * M3 - 0.3413193965 * S3;
-            let bv = -0.0041960863 * L3 - 0.7034186147 * M3 + 1.7076147010 * S3;
-            // linear → gamma-encoded sRGB
-            const gamma = (x: number) => {
-              x = Math.max(0, Math.min(1, x));
-              return x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
-            };
-            const ri = Math.round(gamma(r) * 255);
-            const gi = Math.round(gamma(g) * 255);
-            const bi = Math.round(gamma(bv) * 255);
-            return `#${ri.toString(16).padStart(2, "0")}${gi.toString(16).padStart(2, "0")}${bi.toString(16).padStart(2, "0")}`;
+          // ── Color-space math ──────────────────────────────────────────────
+          const gamma = (x: number) => {
+            x = Math.max(0, Math.min(1, x));
+            return x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
           };
-
-          // Convert oklab(L a b) → hex
           const oklabToHex = (l: number, a: number, b: number): string => {
             const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
             const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
             const s_ = l - 0.0894841775 * a - 1.2914855480 * b;
             const L3 = l_ ** 3, M3 = m_ ** 3, S3 = s_ ** 3;
-            let r  =  4.0767416621 * L3 - 3.3077115913 * M3 + 0.2309699292 * S3;
-            let g  = -1.2684380046 * L3 + 2.6097574011 * M3 - 0.3413193965 * S3;
-            let bv = -0.0041960863 * L3 - 0.7034186147 * M3 + 1.7076147010 * S3;
-            const gamma = (x: number) => {
-              x = Math.max(0, Math.min(1, x));
-              return x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
-            };
+            const r  =  4.0767416621 * L3 - 3.3077115913 * M3 + 0.2309699292 * S3;
+            const g  = -1.2684380046 * L3 + 2.6097574011 * M3 - 0.3413193965 * S3;
+            const bv = -0.0041960863 * L3 - 0.7034186147 * M3 + 1.7076147010 * S3;
             const ri = Math.round(gamma(r) * 255);
             const gi = Math.round(gamma(g) * 255);
             const bi = Math.round(gamma(bv) * 255);
-            return `#${ri.toString(16).padStart(2, "0")}${gi.toString(16).padStart(2, "0")}${bi.toString(16).padStart(2, "0")}`;
+            return `#${ri.toString(16).padStart(2,"0")}${gi.toString(16).padStart(2,"0")}${bi.toString(16).padStart(2,"0")}`;
+          };
+          const oklchToHex = (l: number, c: number, h: number): string => {
+            const hRad = (h * Math.PI) / 180;
+            return oklabToHex(l, c * Math.cos(hRad), c * Math.sin(hRad));
           };
 
-          // Number token: integers, decimals, percentages (strips %)
-          const num = `([+-]?[\\d.]+%?)`;
-          // Optional alpha: "/ 0.5" or "/ 50%"
-          const alpha = `(?:\\s*/\\s*${num})?`;
+          // ── Named-color → rgb table (subset used by Tailwind) ────────────
+          const NAMED: Record<string, [number,number,number]> = {
+            white:[255,255,255], black:[0,0,0], transparent:[0,0,0],
+            red:[255,0,0], green:[0,128,0], blue:[0,0,255],
+          };
+          const hexToRgb = (hex: string): [number,number,number] => [
+            parseInt(hex.slice(1,3),16),
+            parseInt(hex.slice(3,5),16),
+            parseInt(hex.slice(5,7),16),
+          ];
+          // Parse a color token (hex or named) → [r,g,b] | null
+          const parseColor = (tok: string): [number,number,number] | null => {
+            tok = tok.trim().toLowerCase();
+            if (NAMED[tok]) return NAMED[tok];
+            if (/^#[0-9a-f]{6}$/i.test(tok)) return hexToRgb(tok);
+            if (/^#[0-9a-f]{8}$/i.test(tok)) return hexToRgb(tok.slice(0,7)); // drop alpha
+            return null;
+          };
+          const pct = (v: string) => v.endsWith("%") ? +v.slice(0,-1)/100 : +v;
 
-          const patchText = (css: string) =>
-            css
-              // oklch(L C H) and oklch(L C H / alpha)
-              .replace(
-                new RegExp(`oklch\\(\\s*${num}\\s+${num}\\s+${num}\\s*${alpha}\\s*\\)`, "g"),
-                (_m, ls, cs, hs, as) => {
-                  const parse = (v: string) => v.endsWith("%") ? +v.slice(0,-1)/100 : +v;
-                  const hex = oklchToHex(parse(ls), parse(cs), parse(hs));
-                  if (as !== undefined) {
-                    const a = Math.round(Math.max(0, Math.min(1, parse(as))) * 255);
-                    return `${hex}${a.toString(16).padStart(2, "0")}`;
-                  }
-                  return hex;
+          // ── Main patcher ──────────────────────────────────────────────────
+          const patchText = (css: string): string => {
+            // 1. oklch(L C H [/ A]) → hex (or hex+alpha)
+            css = css.replace(
+              /oklch\(\s*([+-]?[\d.]+%?)\s+([+-]?[\d.]+%?)\s+([+-]?[\d.]+%?)(?:\s*\/\s*([+-]?[\d.]+%?))?\s*\)/g,
+              (_m, ls, cs, hs, as) => {
+                const hex = oklchToHex(pct(ls), pct(cs), pct(hs));
+                if (as !== undefined) {
+                  const a = Math.round(Math.max(0,Math.min(1,pct(as)))*255);
+                  return `${hex}${a.toString(16).padStart(2,"0")}`;
                 }
-              )
-              // oklab(L a b) and oklab(L a b / alpha)
-              .replace(
-                new RegExp(`oklab\\(\\s*${num}\\s+${num}\\s+${num}\\s*${alpha}\\s*\\)`, "g"),
-                (_m, ls, as2, bs, alphas) => {
-                  const parse = (v: string) => v.endsWith("%") ? +v.slice(0,-1)/100 : +v;
-                  const hex = oklabToHex(parse(ls), parse(as2), parse(bs));
-                  if (alphas !== undefined) {
-                    const a = Math.round(Math.max(0, Math.min(1, parse(alphas))) * 255);
-                    return `${hex}${a.toString(16).padStart(2, "0")}`;
-                  }
-                  return hex;
+                return hex;
+              }
+            );
+
+            // 2. oklab(L a b [/ A]) → hex (or hex+alpha)
+            css = css.replace(
+              /oklab\(\s*([+-]?[\d.]+%?)\s+([+-]?[\d.]+%?)\s+([+-]?[\d.]+%?)(?:\s*\/\s*([+-]?[\d.]+%?))?\s*\)/g,
+              (_m, ls, as2, bs, alphas) => {
+                const hex = oklabToHex(pct(ls), pct(as2), pct(bs));
+                if (alphas !== undefined) {
+                  const a = Math.round(Math.max(0,Math.min(1,pct(alphas)))*255);
+                  return `${hex}${a.toString(16).padStart(2,"0")}`;
                 }
-              );
+                return hex;
+              }
+            );
+
+            // 3. color-mix(in ok*, <color> <pct>%, transparent) → rgba
+            //    Tailwind v4 generates this for opacity modifiers (bg-red-500/50)
+            //    After steps 1+2, oklch/oklab values inside color-mix are now hex.
+            const evalColorMix = (colorTok: string, mixPct: number): string => {
+              const rgb = parseColor(colorTok);
+              if (rgb) return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(mixPct/100).toFixed(3)})`;
+              return colorTok; // fallback: unknown color → leave as-is
+            };
+            // color-mix(in ok*, <color> N%, transparent)
+            css = css.replace(
+              /color-mix\(\s*in\s+ok[a-z]+\s*,\s*([^,]+?)\s+([\d.]+)%\s*,\s*transparent\s*\)/gi,
+              (_m, c, p) => evalColorMix(c.trim(), +p)
+            );
+            // color-mix(in ok*, transparent, <color> N%)
+            css = css.replace(
+              /color-mix\(\s*in\s+ok[a-z]+\s*,\s*transparent\s*,\s*([^,]+?)\s+([\d.]+)%\s*\)/gi,
+              (_m, c, p) => evalColorMix(c.trim(), +p)
+            );
+            // color-mix(in ok*, <color1> N%, <color2>) — generic two-color blend
+            css = css.replace(
+              /color-mix\(\s*in\s+ok[a-z]+\s*,\s*([^,]+?)\s+([\d.]+)%\s*,\s*([^)]+?)\s*\)/gi,
+              (_m, c1, p1, c2) => {
+                const rgb1 = parseColor(c1.trim());
+                const rgb2 = parseColor(c2.trim());
+                if (rgb1 && rgb2) {
+                  const t = +p1 / 100;
+                  const r = Math.round(rgb1[0]*t + rgb2[0]*(1-t));
+                  const g = Math.round(rgb1[1]*t + rgb2[1]*(1-t));
+                  const b = Math.round(rgb1[2]*t + rgb2[2]*(1-t));
+                  return `rgb(${r},${g},${b})`;
+                }
+                return rgb1 ? `rgb(${rgb1[0]},${rgb1[1]},${rgb1[2]})` : (rgb2 ? `rgb(${rgb2[0]},${rgb2[1]},${rgb2[2]})` : "#888888");
+              }
+            );
+
+            // 4. Any remaining ok-color references → safe fallback
+            //    Catches edge cases like `color-mix(in oklab …)` with var() args
+            css = css.replace(/\bok(?:lab|lch)\b/gi, "srgb");
+
+            return css;
+          };
 
           // Patch every <style> tag in the cloned document
           element.ownerDocument.querySelectorAll("style").forEach((s) => {
