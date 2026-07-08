@@ -1,20 +1,20 @@
 import React, { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Upload, X, Crop } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { PhotoCropDialog } from "./PhotoCropDialog";
+import { RichTextEditor } from "./RichTextEditor";
 
 export function PersonalInfoSection({ data, onChange }: { data: any, onChange: (d: any) => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropOpen, setCropOpen] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange({ ...data, [e.target.name]: e.target.value });
   };
 
@@ -28,7 +28,6 @@ export function PersonalInfoSection({ data, onChange }: { data: any, onChange: (
       setCropOpen(true);
     };
     reader.readAsDataURL(file);
-    // Reset input so same file can be re-selected
     e.target.value = "";
   };
 
@@ -39,7 +38,6 @@ export function PersonalInfoSection({ data, onChange }: { data: any, onChange: (
   };
 
   const handleAdjust = () => {
-    // Re-open cropper using the current photo as source
     setCropSrc(data.photoUrl);
     setCropOpen(true);
   };
@@ -182,11 +180,11 @@ export function PersonalInfoSection({ data, onChange }: { data: any, onChange: (
       </div>
       <div className="col-span-2 space-y-2">
         <Label>Resumen profesional</Label>
-        <Textarea 
-          name="summary" 
-          value={data?.summary || ''} 
-          onChange={handleChange}
-          className="h-24 resize-none"
+        <RichTextEditor
+          value={data?.summary || ''}
+          onChange={(val) => onChange({ ...data, summary: val })}
+          placeholder="Escribe tu resumen profesional..."
+          minHeight="96px"
         />
       </div>
     </div>
@@ -211,15 +209,15 @@ export function WorkExperienceSection({ data, onChange }: { data: any[], onChang
     <div className="space-y-6">
       {data.map((item) => (
         <div key={item.id} className="p-4 border rounded-md bg-gray-50/50 relative group">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={() => handleDelete(item.id)}
           >
             <Trash2 className="h-3 w-3" />
           </Button>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1.5">
               <Label className="text-xs">Cargo</Label>
@@ -239,28 +237,28 @@ export function WorkExperienceSection({ data, onChange }: { data: any[], onChang
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Fecha fin</Label>
-              <Input 
-                value={item.endDate || ''} 
-                placeholder="ej. Actual" 
+              <Input
+                value={item.endDate || ''}
+                placeholder="ej. Actual"
                 disabled={item.current}
-                onChange={e => handleUpdate(item.id, 'endDate', e.target.value)} 
+                onChange={e => handleUpdate(item.id, 'endDate', e.target.value)}
               />
               <div className="flex items-center gap-2 mt-2">
-                <Switch 
-                  id={`current-${item.id}`} 
-                  checked={item.current} 
-                  onCheckedChange={(checked) => handleUpdate(item.id, 'current', checked)} 
+                <Switch
+                  id={`current-${item.id}`}
+                  checked={item.current}
+                  onCheckedChange={(checked) => handleUpdate(item.id, 'current', checked)}
                 />
                 <Label htmlFor={`current-${item.id}`} className="text-[10px] uppercase font-semibold text-gray-500 cursor-pointer">Trabajo aquí actualmente</Label>
               </div>
             </div>
             <div className="col-span-2 space-y-1.5 mt-2">
               <Label className="text-xs">Descripción</Label>
-              <Textarea 
-                value={item.description || ''} 
-                onChange={e => handleUpdate(item.id, 'description', e.target.value)}
-                className="h-24 resize-none"
+              <RichTextEditor
+                value={item.description || ''}
+                onChange={(val) => handleUpdate(item.id, 'description', val)}
                 placeholder="Describe tus logros y responsabilidades..."
+                minHeight="96px"
               />
             </div>
           </div>
@@ -290,15 +288,15 @@ export function EducationSection({ data, onChange }: { data: any[], onChange: (d
     <div className="space-y-6">
       {data.map((item) => (
         <div key={item.id} className="p-4 border rounded-md bg-gray-50/50 relative group">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={() => handleDelete(item.id)}
           >
             <Trash2 className="h-3 w-3" />
           </Button>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1.5">
               <Label className="text-xs">Escuela / Universidad</Label>
@@ -318,26 +316,27 @@ export function EducationSection({ data, onChange }: { data: any[], onChange: (d
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Fecha fin</Label>
-              <Input 
-                value={item.endDate || ''} 
+              <Input
+                value={item.endDate || ''}
                 disabled={item.current}
-                onChange={e => handleUpdate(item.id, 'endDate', e.target.value)} 
+                onChange={e => handleUpdate(item.id, 'endDate', e.target.value)}
               />
               <div className="flex items-center gap-2 mt-2">
-                <Switch 
-                  id={`edu-current-${item.id}`} 
-                  checked={item.current} 
-                  onCheckedChange={(checked) => handleUpdate(item.id, 'current', checked)} 
+                <Switch
+                  id={`edu-current-${item.id}`}
+                  checked={item.current}
+                  onCheckedChange={(checked) => handleUpdate(item.id, 'current', checked)}
                 />
                 <Label htmlFor={`edu-current-${item.id}`} className="text-[10px] uppercase font-semibold text-gray-500 cursor-pointer">Estudio aquí actualmente</Label>
               </div>
             </div>
             <div className="col-span-2 space-y-1.5 mt-2">
               <Label className="text-xs">Descripción (opcional)</Label>
-              <Textarea 
-                value={item.description || ''} 
-                onChange={e => handleUpdate(item.id, 'description', e.target.value)}
-                className="h-16 resize-none"
+              <RichTextEditor
+                value={item.description || ''}
+                onChange={(val) => handleUpdate(item.id, 'description', val)}
+                placeholder="Descripción adicional..."
+                minHeight="64px"
               />
             </div>
           </div>
@@ -375,10 +374,10 @@ export function SkillsSection({ data, onChange }: { data: any[], onChange: (d: a
       {data.map((item) => (
         <div key={item.id} className="flex items-start gap-4 p-3 border rounded-md bg-gray-50/50">
           <div className="flex-1 space-y-3">
-            <Input 
-              value={item.name} 
+            <Input
+              value={item.name}
               placeholder="Habilidad (ej. React, Diseño)"
-              onChange={e => handleUpdate(item.id, 'name', e.target.value)} 
+              onChange={e => handleUpdate(item.id, 'name', e.target.value)}
               className="h-8 text-sm"
             />
             <div className="px-1">
@@ -386,9 +385,9 @@ export function SkillsSection({ data, onChange }: { data: any[], onChange: (d: a
                 <span>Nivel</span>
                 <span className="text-primary">{getSkillLabel(item.level)}</span>
               </div>
-              <Slider 
-                value={[item.level]} 
-                max={100} 
+              <Slider
+                value={[item.level]}
+                max={100}
                 step={5}
                 onValueChange={(vals) => handleUpdate(item.id, 'level', vals[0])}
               />
@@ -425,10 +424,10 @@ export function LanguagesSection({ data, onChange }: { data: any[], onChange: (d
     <div className="space-y-3">
       {data.map((item) => (
         <div key={item.id} className="flex gap-2 items-center">
-          <Input 
-            value={item.language} 
+          <Input
+            value={item.language}
             placeholder="Idioma (ej. Francés)"
-            onChange={e => handleUpdate(item.id, 'language', e.target.value)} 
+            onChange={e => handleUpdate(item.id, 'language', e.target.value)}
             className="flex-1"
           />
           <Select value={item.proficiency} onValueChange={(val) => handleUpdate(item.id, 'proficiency', val)}>

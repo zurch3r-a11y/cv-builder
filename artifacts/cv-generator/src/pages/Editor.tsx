@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import { useParams, useLocation } from "wouter";
-import { ArrowLeft, Loader2, Save, Download } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Download, Type } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { Link } from "wouter";
@@ -27,7 +27,7 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CVPreview } from "@/components/CVPreview";
 import { ModernTemplate, ClassicTemplate, MinimalTemplate, ExecutiveTemplate } from "@/components/cv-templates";
-import { TEMPLATES, ACCENT_COLORS } from "@/lib/constants";
+import { TEMPLATES, ACCENT_COLORS, TEXT_COLORS } from "@/lib/constants";
 
 import { 
   PersonalInfoSection, 
@@ -58,6 +58,7 @@ export default function Editor() {
   const [title, setTitle] = useState("");
   const [template, setTemplate] = useState("");
   const [accentColor, setAccentColor] = useState("");
+  const [textColor, setTextColor] = useState("#111827");
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
   
   // Save State
@@ -67,8 +68,8 @@ export default function Editor() {
   
   // Initialization Guard
   const initializedForId = useRef<number | null>(null);
-  const lastSavedData = useRef<{ title: string, template: string, accentColor: string, data: ResumeData | null }>({
-    title: "", template: "", accentColor: "", data: null
+  const lastSavedData = useRef<{ title: string, template: string, accentColor: string, textColor: string, data: ResumeData | null }>({
+    title: "", template: "", accentColor: "", textColor: "", data: null
   });
   const mutateFnRef = useRef(updateResume.mutate);
 
@@ -81,14 +82,15 @@ export default function Editor() {
     if (!resumeData) return;
     setPdfLoading(true);
 
-    // Render the CV template into an off-screen div to avoid any
-    // overflow-clipping or scrollable-container capture issues.
+    // Render the CV template into an off-screen div.
+    // Use position:absolute so the container's height is content-driven,
+    // not fixed to the viewport (which is what position:fixed causes).
     const container = document.createElement("div");
     container.style.cssText =
-      "position:fixed;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;";
+      "position:absolute;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;overflow:visible;";
     document.body.appendChild(container);
 
-    const TemplateMap: Record<string, React.ComponentType<{ data: ResumeData; accentColor: string }>> = {
+    const TemplateMap: Record<string, React.ComponentType<{ data: ResumeData; accentColor: string; textColor?: string }>> = {
       modern: ModernTemplate,
       classic: ClassicTemplate,
       minimal: MinimalTemplate,
@@ -97,10 +99,12 @@ export default function Editor() {
     const TemplateComponent = TemplateMap[template] ?? ModernTemplate;
 
     const root = createRoot(container);
-    root.render(<TemplateComponent data={resumeData} accentColor={accentColor} />);
+    root.render(
+      <TemplateComponent data={resumeData} accentColor={accentColor} textColor={textColor} />
+    );
 
     // Give React a moment to paint
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 500));
 
     try {
       const canvas = await html2canvas(container, {
@@ -112,11 +116,18 @@ export default function Editor() {
         width: 794,
         height: container.scrollHeight,
         windowWidth: 794,
-        // html2canvas parses every <style> element's raw text and crashes on
-        // oklch() (Tailwind v4's native color format). Use onclone to rewrite
-        // every oklch(...) to a hex string via proper color-space math before
-        // the canvas renderer sees the stylesheet.
+        // html2canvas crashes on oklch() (Tailwind v4). Rewrite all oklch/oklab
+        // to hex, plus strip color-mix() for opacity modifiers.
         onclone: (_clonedDoc: Document, element: HTMLElement) => {
+          // ── Remove h-full so template only takes content height ───────────
+          // Templates use h-full which resolves to viewport height in fixed/absolute
+          // containers. Override to 'auto' so the PDF is compact.
+          const templateRoot = element.firstElementChild as HTMLElement | null;
+          if (templateRoot) {
+            templateRoot.style.height = "auto";
+            templateRoot.style.minHeight = "0";
+          }
+
           // ── Color-space math ──────────────────────────────────────────────
           const gamma = (x: number) => {
             x = Math.max(0, Math.min(1, x));
@@ -150,19 +161,17 @@ export default function Editor() {
             parseInt(hex.slice(3,5),16),
             parseInt(hex.slice(5,7),16),
           ];
-          // Parse a color token (hex or named) → [r,g,b] | null
           const parseColor = (tok: string): [number,number,number] | null => {
             tok = tok.trim().toLowerCase();
             if (NAMED[tok]) return NAMED[tok];
             if (/^#[0-9a-f]{6}$/i.test(tok)) return hexToRgb(tok);
-            if (/^#[0-9a-f]{8}$/i.test(tok)) return hexToRgb(tok.slice(0,7)); // drop alpha
+            if (/^#[0-9a-f]{8}$/i.test(tok)) return hexToRgb(tok.slice(0,7));
             return null;
           };
           const pct = (v: string) => v.endsWith("%") ? +v.slice(0,-1)/100 : +v;
 
           // ── Main patcher ──────────────────────────────────────────────────
           const patchText = (css: string): string => {
-            // 1. oklch(L C H [/ A]) → hex (or hex+alpha)
             css = css.replace(
               /oklch\(\s*([+-]?[\d.]+%?)\s+([+-]?[\d.]+%?)\s+([+-]?[\d.]+%?)(?:\s*\/\s*([+-]?[\d.]+%?))?\s*\)/g,
               (_m, ls, cs, hs, as) => {
@@ -174,8 +183,6 @@ export default function Editor() {
                 return hex;
               }
             );
-
-            // 2. oklab(L a b [/ A]) → hex (or hex+alpha)
             css = css.replace(
               /oklab\(\s*([+-]?[\d.]+%?)\s+([+-]?[\d.]+%?)\s+([+-]?[\d.]+%?)(?:\s*\/\s*([+-]?[\d.]+%?))?\s*\)/g,
               (_m, ls, as2, bs, alphas) => {
@@ -187,26 +194,19 @@ export default function Editor() {
                 return hex;
               }
             );
-
-            // 3. color-mix(in ok*, <color> <pct>%, transparent) → rgba
-            //    Tailwind v4 generates this for opacity modifiers (bg-red-500/50)
-            //    After steps 1+2, oklch/oklab values inside color-mix are now hex.
             const evalColorMix = (colorTok: string, mixPct: number): string => {
               const rgb = parseColor(colorTok);
               if (rgb) return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(mixPct/100).toFixed(3)})`;
-              return colorTok; // fallback: unknown color → leave as-is
+              return colorTok;
             };
-            // color-mix(in ok*, <color> N%, transparent)
             css = css.replace(
               /color-mix\(\s*in\s+ok[a-z]+\s*,\s*([^,]+?)\s+([\d.]+)%\s*,\s*transparent\s*\)/gi,
               (_m, c, p) => evalColorMix(c.trim(), +p)
             );
-            // color-mix(in ok*, transparent, <color> N%)
             css = css.replace(
               /color-mix\(\s*in\s+ok[a-z]+\s*,\s*transparent\s*,\s*([^,]+?)\s+([\d.]+)%\s*\)/gi,
               (_m, c, p) => evalColorMix(c.trim(), +p)
             );
-            // color-mix(in ok*, <color1> N%, <color2>) — generic two-color blend
             css = css.replace(
               /color-mix\(\s*in\s+ok[a-z]+\s*,\s*([^,]+?)\s+([\d.]+)%\s*,\s*([^)]+?)\s*\)/gi,
               (_m, c1, p1, c2) => {
@@ -222,15 +222,10 @@ export default function Editor() {
                 return rgb1 ? `rgb(${rgb1[0]},${rgb1[1]},${rgb1[2]})` : (rgb2 ? `rgb(${rgb2[0]},${rgb2[1]},${rgb2[2]})` : "#888888");
               }
             );
-
-            // 4. Any remaining ok-color references → safe fallback
-            //    Catches edge cases like `color-mix(in oklab …)` with var() args
             css = css.replace(/\bok(?:lab|lch)\b/gi, "srgb");
-
             return css;
           };
 
-          // Patch every <style> tag in the cloned document
           element.ownerDocument.querySelectorAll("style").forEach((s) => {
             s.textContent = patchText(s.textContent ?? "");
           });
@@ -260,7 +255,7 @@ export default function Editor() {
       document.body.removeChild(container);
       setPdfLoading(false);
     }
-  }, [resumeData, template, accentColor, title, toast]);
+  }, [resumeData, template, accentColor, textColor, title, toast]);
 
   // Init Data from Server
   useEffect(() => {
@@ -269,13 +264,17 @@ export default function Editor() {
       setTitle(resume.title);
       setTemplate(resume.template);
       setAccentColor(resume.accentColor);
+      // textColor is persisted in localStorage (not the API) since it's a UI preference
+      const storedTextColor = localStorage.getItem(`cv-textColor-${resumeId}`);
+      setTextColor(storedTextColor || "#111827");
       setResumeData(resume.data);
       
       lastSavedData.current = {
         title: resume.title,
         template: resume.template,
         accentColor: resume.accentColor,
-        data: JSON.parse(JSON.stringify(resume.data)) // Deep copy
+        textColor: storedTextColor || "#111827",
+        data: JSON.parse(JSON.stringify(resume.data))
       };
     }
   }, [resume, resumeId]);
@@ -302,8 +301,7 @@ export default function Editor() {
   const triggerSave = useCallback(() => {
     if (!resumeData || !title || !template || !accentColor) return;
     
-    // Check if anything actually changed deeply
-    const currentSnapshot = JSON.stringify({ title, template, accentColor, data: resumeData });
+    const currentSnapshot = JSON.stringify({ title, template, accentColor, textColor, data: resumeData });
     const lastSavedSnapshot = JSON.stringify(lastSavedData.current);
     
     if (currentSnapshot === lastSavedSnapshot) return;
@@ -319,17 +317,13 @@ export default function Editor() {
         onSuccess: (updatedResume) => {
           setSaveStatus("saved");
           
-          // Update last saved snapshot
           lastSavedData.current = {
-            title, template, accentColor, data: JSON.parse(JSON.stringify(resumeData))
+            title, template, accentColor, textColor, data: JSON.parse(JSON.stringify(resumeData))
           };
 
-          // Patch cache locally to avoid full refetch
           queryClient.setQueryData(getGetResumeQueryKey(resumeId), updatedResume);
-          // Invalidate list in background
           queryClient.invalidateQueries({ queryKey: getListResumesQueryKey() });
 
-          // Reset to idle after a delay
           setTimeout(() => setSaveStatus("idle"), 2000);
         },
         onError: () => {
@@ -342,7 +336,13 @@ export default function Editor() {
         }
       }
     );
-  }, [resumeId, title, template, accentColor, resumeData, queryClient, toast]);
+  }, [resumeId, title, template, accentColor, textColor, resumeData, queryClient, toast]);
+
+  // Persist textColor to localStorage whenever it changes
+  useEffect(() => {
+    if (initializedForId.current !== resumeId) return;
+    localStorage.setItem(`cv-textColor-${resumeId}`, textColor);
+  }, [textColor, resumeId]);
 
   // Debounce effect
   useEffect(() => {
@@ -359,7 +359,7 @@ export default function Editor() {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [resumeData, title, template, accentColor, resumeId, triggerSave]);
+  }, [resumeData, title, template, accentColor, textColor, resumeId, triggerSave]);
 
   const updateData = (section: keyof ResumeData, payload: any) => {
     setResumeData(prev => prev ? { ...prev, [section]: payload } : null);
@@ -391,12 +391,13 @@ export default function Editor() {
           />
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-5 overflow-x-auto">
+          {/* Template selector */}
+          <div className="flex items-center gap-2 text-sm shrink-0">
             <span className="text-muted-foreground font-medium uppercase text-xs tracking-wider">Plantilla:</span>
             <Select value={template} onValueChange={setTemplate}>
-              <SelectTrigger className="h-8 w-[140px] border-none shadow-none bg-gray-100 hover:bg-gray-200">
-                <SelectValue placeholder="Seleccionar plantilla" />
+              <SelectTrigger className="h-8 w-[130px] border-none shadow-none bg-gray-100 hover:bg-gray-200">
+                <SelectValue placeholder="Plantilla" />
               </SelectTrigger>
               <SelectContent>
                 {TEMPLATES.map(t => (
@@ -406,14 +407,14 @@ export default function Editor() {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground font-medium uppercase text-xs tracking-wider">Color:</span>
-
+          {/* Accent color picker */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-muted-foreground font-medium uppercase text-xs tracking-wider">Acento:</span>
             <div className="flex gap-1">
               {ACCENT_COLORS.map(c => (
                 <button
                   key={c.value}
-                  className={`w-6 h-6 rounded-full border border-black/10 transition-transform ${accentColor === c.value ? 'scale-125 ring-1 ring-offset-1 ring-primary' : 'hover:scale-110'}`}
+                  className={`w-5 h-5 rounded-full border border-black/10 transition-transform ${accentColor === c.value ? 'scale-125 ring-1 ring-offset-1 ring-primary' : 'hover:scale-110'}`}
                   style={{ backgroundColor: c.value }}
                   onClick={() => setAccentColor(c.value)}
                   title={c.name}
@@ -422,7 +423,26 @@ export default function Editor() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Text color picker */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-muted-foreground font-medium uppercase text-xs tracking-wider flex items-center gap-1">
+              <Type className="h-3 w-3" /> Texto:
+            </span>
+            <div className="flex gap-1">
+              {TEXT_COLORS.map(c => (
+                <button
+                  key={c.value}
+                  className={`w-5 h-5 rounded-full border border-black/10 transition-transform ${textColor === c.value ? 'scale-125 ring-1 ring-offset-1 ring-primary' : 'hover:scale-110'}`}
+                  style={{ backgroundColor: c.value }}
+                  onClick={() => setTextColor(c.value)}
+                  title={c.name}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Save status + Download */}
+          <div className="flex items-center gap-3 shrink-0">
             <div className="flex items-center gap-2 min-w-[80px] justify-end">
               {saveStatus === "saving" && (
                 <span className="text-xs text-muted-foreground flex items-center">
@@ -514,7 +534,8 @@ export default function Editor() {
           <CVPreview 
             data={resumeData} 
             template={template} 
-            accentColor={accentColor} 
+            accentColor={accentColor}
+            textColor={textColor}
           />
         </div>
       </div>

@@ -1,10 +1,11 @@
 import { TemplateProps } from "./types";
+import { renderDescription } from "./render-description";
 
-export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
+export function ExecutiveTemplate({ data, accentColor, textColor = '#111827' }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages } = data;
 
   return (
-    <div className="w-full h-full bg-white text-gray-800 font-sans text-[13px] leading-relaxed flex flex-col">
+    <div className="w-full bg-white font-sans text-[13px] leading-relaxed flex flex-col" style={{ color: textColor }}>
       {/* Bold Header */}
       <div className="text-white p-8 flex flex-col items-center justify-center text-center" style={{ backgroundColor: accentColor }}>
         {personalInfo?.photoUrl && (
@@ -37,37 +38,41 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
       </div>
 
       <div className="flex flex-row flex-1 p-8 gap-8 bg-gray-50">
-        
+
         {/* Main Column */}
-        <div className="flex-1 flex flex-col gap-6">
+        <div className="flex-1 flex flex-col gap-5">
           {personalInfo?.summary && (
             <div>
-              <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: '#111827' }}>
+              <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: textColor }}>
                 Resumen Ejecutivo
               </h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{personalInfo.summary}</p>
+              <div className="opacity-80">
+                {renderDescription(personalInfo.summary)}
+              </div>
             </div>
           )}
 
           {workExperience && workExperience.length > 0 && (
             <div>
-              <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-4" style={{ borderColor: accentColor, color: '#111827' }}>
+              <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-4" style={{ borderColor: accentColor, color: textColor }}>
                 Experiencia Profesional
               </h2>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4">
                 {workExperience.map((exp) => (
                   <div key={exp.id}>
                     <div className="flex justify-between items-baseline mb-1">
-                      <h3 className="font-bold text-gray-900 text-[15px]">{exp.jobTitle}</h3>
-                      <span className="text-gray-600 font-semibold text-xs uppercase tracking-wider">
+                      <h3 className="font-bold text-[15px]">{exp.jobTitle}</h3>
+                      <span className="opacity-50 font-semibold text-xs uppercase tracking-wider">
                         {exp.startDate} - {exp.current ? "Actual" : exp.endDate}
                       </span>
                     </div>
-                    <div className="text-gray-700 font-medium mb-2">
+                    <div className="font-medium mb-1 opacity-70">
                       {exp.employer} {exp.city && `| ${exp.city}`}
                     </div>
                     {exp.description && (
-                      <p className="text-gray-600 whitespace-pre-wrap">{exp.description}</p>
+                      <div className="opacity-75">
+                        {renderDescription(exp.description)}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -77,22 +82,22 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
         </div>
 
         {/* Sidebar Column */}
-        <div className="w-[30%] flex flex-col gap-6">
-          
+        <div className="w-[30%] flex flex-col gap-5">
+
           {education && education.length > 0 && (
             <div>
-              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: '#111827' }}>
+              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: textColor }}>
                 Educación
               </h2>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3">
                 {education.map((edu) => (
                   <div key={edu.id}>
-                    <h3 className="font-bold text-gray-900 text-sm">{edu.degree}</h3>
-                    <div className="text-gray-700 text-xs mb-1">{edu.fieldOfStudy}</div>
-                    <div className="text-gray-500 text-xs mb-1">
+                    <h3 className="font-bold text-sm">{edu.degree}</h3>
+                    <div className="text-xs mb-1 opacity-60">{edu.fieldOfStudy}</div>
+                    <div className="text-xs mb-1 opacity-50">
                       {edu.school}
                     </div>
-                    <span className="text-gray-400 text-xs">
+                    <span className="opacity-40 text-xs">
                       {edu.startDate} - {edu.current ? "Actual" : edu.endDate}
                     </span>
                   </div>
@@ -103,13 +108,13 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
 
           {skills && skills.length > 0 && (
             <div>
-              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: '#111827' }}>
+              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: textColor }}>
                 Competencias Clave
               </h2>
               <div className="flex flex-col gap-2">
                 {skills.map((skill) => (
                   <div key={skill.id} className="flex justify-between items-center text-sm">
-                    <span className="font-medium text-gray-700">{skill.name}</span>
+                    <span className="font-medium opacity-80">{skill.name}</span>
                     <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${skill.level}%`, backgroundColor: accentColor }} />
                     </div>
@@ -121,14 +126,14 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
 
           {languages && languages.length > 0 && (
             <div>
-              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: '#111827' }}>
+              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: textColor }}>
                 Idiomas
               </h2>
               <div className="flex flex-col gap-2">
                 {languages.map((lang) => (
                   <div key={lang.id} className="flex flex-col text-sm">
-                    <span className="font-bold text-gray-800">{lang.language}</span>
-                    <span className="text-gray-500 text-xs">{lang.proficiency}</span>
+                    <span className="font-bold opacity-80">{lang.language}</span>
+                    <span className="opacity-50 text-xs">{lang.proficiency}</span>
                   </div>
                 ))}
               </div>

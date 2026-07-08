@@ -1,2 +1,3 @@
 - [CV Builder migration](cv-builder-migration.md) — full-stack CV app migrated from ZIP; body-parser limit and BASE_PATH defaulting are critical gotchas.
 - [DB declarations must be rebuilt](db-declarations-rebuild.md) — after adding new Drizzle schema files, must run `pnpm -w exec tsc --build lib/db` so api-server sees new exports.
+- [TipTap v3 StarterKit quirks](tiptap-v3-starterkit.md) — v3 bundles Underline+Link by default; disable in StarterKit config to avoid duplicate-extension warning. Vite dedupe + clearing .vite cache required for pnpm monorepo.

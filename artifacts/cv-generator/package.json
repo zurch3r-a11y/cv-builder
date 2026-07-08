@@ -75,6 +75,12 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@tiptap/extension-link": "^3.27.2",
+    "@tiptap/extension-text-align": "^3.27.2",
+    "@tiptap/extension-underline": "^3.27.2",
+    "@tiptap/pm": "^3.27.2",
+    "@tiptap/react": "^3.27.2",
+    "@tiptap/starter-kit": "^3.27.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1"
   }

@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Calendar, Globe, Heart, CreditCard, Link, User } from "lucide-react";
 import { TemplateProps } from "./types";
+import { renderDescription } from "./render-description";
 
 function formatBirthDate(dateStr: string): string {
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -11,13 +12,13 @@ function formatBirthDate(dateStr: string): string {
   return `${parseInt(day, 10)} de ${meses[m - 1]} de ${year}`;
 }
 
-export function ModernTemplate({ data, accentColor }: TemplateProps) {
+export function ModernTemplate({ data, accentColor, textColor = '#111827' }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages } = data;
 
   return (
-    <div className="w-full h-full flex flex-row bg-white text-gray-900 font-sans text-[13px] leading-relaxed">
+    <div className="w-full flex flex-row bg-white font-sans text-[13px] leading-relaxed" style={{ color: textColor }}>
       {/* Left Sidebar */}
-      <div 
+      <div
         className="w-[32%] text-white p-8"
         style={{ backgroundColor: accentColor }}
       >
@@ -144,29 +145,33 @@ export function ModernTemplate({ data, accentColor }: TemplateProps) {
       {/* Right Content */}
       <div className="w-[68%] p-8 bg-white">
         {personalInfo?.summary && (
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="text-xl font-bold uppercase tracking-wider pb-2 mb-3 border-b border-gray-200" style={{ color: accentColor }}>Perfil</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{personalInfo.summary}</p>
+            <div style={{ color: textColor }}>
+              {renderDescription(personalInfo.summary)}
+            </div>
           </div>
         )}
 
         {education && education.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="text-xl font-bold uppercase tracking-wider pb-2 mb-4 border-b border-gray-200" style={{ color: accentColor }}>Formación</h2>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {education.map((edu) => (
                 <div key={edu.id}>
                   <div className="flex justify-between items-baseline mb-1">
-                    <h3 className="font-bold text-gray-900 text-base">{edu.degree} {edu.fieldOfStudy && `en ${edu.fieldOfStudy}`}</h3>
+                    <h3 className="font-bold text-[15px]" style={{ color: textColor }}>{edu.degree} {edu.fieldOfStudy && `en ${edu.fieldOfStudy}`}</h3>
                     <span className="text-gray-500 text-sm whitespace-nowrap ml-4">
                       {edu.startDate} - {edu.current ? "Actual" : edu.endDate}
                     </span>
                   </div>
-                  <div className="text-gray-700 font-medium mb-1">
+                  <div className="font-medium mb-1 opacity-75">
                     {edu.school} {edu.city && `| ${edu.city}`}
                   </div>
                   {edu.description && (
-                    <p className="text-gray-600 whitespace-pre-wrap">{edu.description}</p>
+                    <div className="opacity-80">
+                      {renderDescription(edu.description)}
+                    </div>
                   )}
                 </div>
               ))}
@@ -175,22 +180,24 @@ export function ModernTemplate({ data, accentColor }: TemplateProps) {
         )}
 
         {workExperience && workExperience.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="text-xl font-bold uppercase tracking-wider pb-2 mb-4 border-b border-gray-200" style={{ color: accentColor }}>Experiencia</h2>
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
               {workExperience.map((exp) => (
                 <div key={exp.id}>
                   <div className="flex justify-between items-baseline mb-1">
-                    <h3 className="font-bold text-gray-900 text-base">{exp.jobTitle}</h3>
+                    <h3 className="font-bold text-[15px]" style={{ color: textColor }}>{exp.jobTitle}</h3>
                     <span className="text-gray-500 text-sm whitespace-nowrap ml-4">
                       {exp.startDate} - {exp.current ? "Actual" : exp.endDate}
                     </span>
                   </div>
-                  <div className="text-gray-700 font-medium mb-2">
+                  <div className="font-medium mb-1 opacity-75">
                     {exp.employer} {exp.city && `| ${exp.city}`}
                   </div>
                   {exp.description && (
-                    <p className="text-gray-600 whitespace-pre-wrap">{exp.description}</p>
+                    <div className="opacity-80">
+                      {renderDescription(exp.description)}
+                    </div>
                   )}
                 </div>
               ))}
