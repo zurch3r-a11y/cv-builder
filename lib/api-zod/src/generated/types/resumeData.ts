@@ -5,6 +5,7 @@
  * CV Generator API
  * OpenAPI spec version: 0.1.0
  */
+import type { Course } from './course';
 import type { Education } from './education';
 import type { Language } from './language';
 import type { PersonalInfo } from './personalInfo';
@@ -17,4 +18,5 @@ export interface ResumeData {
   education?: Education[];
   skills?: Skill[];
   languages?: Language[];
+  courses?: Course[];
 }

@@ -2,7 +2,7 @@ import { TemplateProps } from "./types";
 import { renderDescription } from "./render-description";
 
 export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
-  const { personalInfo, workExperience, education, skills, languages } = data;
+  const { personalInfo, workExperience, education, skills, languages, courses } = data;
 
   return (
     <div className="w-full bg-white font-sans text-[13px] leading-relaxed flex flex-col text-gray-800">
@@ -134,6 +134,25 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
                   <div key={lang.id} className="flex flex-col text-sm">
                     <span className="font-bold opacity-80">{lang.language}</span>
                     <span className="opacity-50 text-xs">{lang.proficiency}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {courses && courses.length > 0 && (
+            <div>
+              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor }}>
+                Form. Complementaria
+              </h2>
+              <div className="flex flex-col gap-2.5">
+                {courses.map((course) => (
+                  <div key={course.id}>
+                    <div className="font-bold text-sm leading-tight">{course.name}</div>
+                    <div className="text-[11px] opacity-50 uppercase tracking-wide">{course.modality}</div>
+                    {course.description && (
+                      <div className="text-xs opacity-70 leading-snug mt-0.5">{renderDescription(course.description)}</div>
+                    )}
                   </div>
                 ))}
               </div>

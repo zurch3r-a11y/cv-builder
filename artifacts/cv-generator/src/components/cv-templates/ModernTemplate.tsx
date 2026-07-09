@@ -13,7 +13,7 @@ function formatBirthDate(dateStr: string): string {
 }
 
 export function ModernTemplate({ data, accentColor }: TemplateProps) {
-  const { personalInfo, workExperience, education, skills, languages } = data;
+  const { personalInfo, workExperience, education, skills, languages, courses } = data;
 
   return (
     <div className="w-full flex flex-row bg-white font-sans text-[13px] leading-relaxed text-gray-800">
@@ -134,6 +134,23 @@ export function ModernTemplate({ data, accentColor }: TemplateProps) {
                   <div key={lang.id} className="flex justify-between text-sm">
                     <span>{lang.language}</span>
                     <span className="opacity-75">{lang.proficiency}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {courses && courses.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold uppercase tracking-wider mb-3 border-b border-white/20 pb-1">Form. Complementaria</h2>
+              <div className="flex flex-col gap-2.5">
+                {courses.map((course) => (
+                  <div key={course.id}>
+                    <div className="font-semibold text-sm leading-tight">{course.name}</div>
+                    <div className="text-[11px] opacity-60 uppercase tracking-wide mb-0.5">{course.modality}</div>
+                    {course.description && (
+                      <div className="text-xs opacity-75 leading-snug">{renderDescription(course.description)}</div>
+                    )}
                   </div>
                 ))}
               </div>

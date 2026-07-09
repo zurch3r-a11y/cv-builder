@@ -73,10 +73,18 @@ export interface Language {
   proficiency: string;
 }
 
+export interface Course {
+  id: string;
+  name: string;
+  modality: string;
+  description?: string;
+}
+
 export interface ResumeData {
   personalInfo?: PersonalInfo;
   workExperience?: WorkExperience[];
   education?: Education[];
   skills?: Skill[];
   languages?: Language[];
+  courses?: Course[];
 }

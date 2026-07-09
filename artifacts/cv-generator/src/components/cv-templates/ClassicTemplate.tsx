@@ -2,7 +2,7 @@ import { TemplateProps } from "./types";
 import { renderDescription } from "./render-description";
 
 export function ClassicTemplate({ data, accentColor }: TemplateProps) {
-  const { personalInfo, workExperience, education, skills, languages } = data;
+  const { personalInfo, workExperience, education, skills, languages, courses } = data;
 
   return (
     <div className="w-full bg-white font-serif p-10 text-[14px] leading-relaxed text-gray-800">
@@ -101,6 +101,28 @@ export function ClassicTemplate({ data, accentColor }: TemplateProps) {
                     <div className="opacity-75 font-serif">
                       {renderDescription(exp.description)}
                     </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {courses && courses.length > 0 && (
+          <div className="mb-5">
+            <h2 className="text-lg font-bold uppercase tracking-widest border-b pb-1 mb-3" style={{ color: accentColor, borderColor: '#e5e7eb' }}>
+              Formación Complementaria
+            </h2>
+            <div className="flex flex-col gap-2">
+              {courses.map((course) => (
+                <div key={course.id}>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-semibold">{course.name}</span>
+                    <span className="opacity-50">·</span>
+                    <span className="italic opacity-60 text-sm">{course.modality}</span>
+                  </div>
+                  {course.description && (
+                    <div className="opacity-70 text-sm">{renderDescription(course.description)}</div>
                   )}
                 </div>
               ))}

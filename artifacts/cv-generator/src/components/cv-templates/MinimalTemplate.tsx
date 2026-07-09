@@ -2,7 +2,7 @@ import { TemplateProps } from "./types";
 import { renderDescription } from "./render-description";
 
 export function MinimalTemplate({ data, accentColor }: TemplateProps) {
-  const { personalInfo, workExperience, education, skills, languages } = data;
+  const { personalInfo, workExperience, education, skills, languages, courses } = data;
 
   return (
     <div className="w-full bg-white font-sans p-12 text-[13px] leading-relaxed text-gray-800">
@@ -119,6 +119,25 @@ export function MinimalTemplate({ data, accentColor }: TemplateProps) {
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {languages.map((lang) => (
                 <span key={lang.id} className="opacity-80">{lang.language} <span className="opacity-60">({lang.proficiency})</span></span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {courses && courses.length > 0 && (
+          <div className="grid grid-cols-[120px_1fr] gap-4 border-t border-gray-100 pt-6">
+            <h2 className="text-xs font-semibold uppercase tracking-widest opacity-40 mt-1">Form. Compl.</h2>
+            <div className="flex flex-col gap-2.5">
+              {courses.map((course) => (
+                <div key={course.id}>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-medium">{course.name}</span>
+                    <span className="text-xs opacity-40 uppercase tracking-wide">{course.modality}</span>
+                  </div>
+                  {course.description && (
+                    <div className="opacity-60 text-xs mt-0.5 leading-snug">{renderDescription(course.description)}</div>
+                  )}
+                </div>
               ))}
             </div>
           </div>

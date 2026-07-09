@@ -34,7 +34,8 @@ import {
   WorkExperienceSection, 
   EducationSection, 
   SkillsSection, 
-  LanguagesSection 
+  LanguagesSection,
+  CoursesSection
 } from "@/components/editor/EditorSections";
 
 export default function Editor() {
@@ -493,6 +494,16 @@ export default function Editor() {
                   <LanguagesSection 
                     data={resumeData.languages || []} 
                     onChange={(data: any) => updateData('languages', data)} 
+                  />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="courses" className="bg-white rounded-lg border px-1 shadow-sm">
+                <AccordionTrigger className="px-4 font-semibold hover:no-underline text-[15px]">Formación Complementaria</AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <CoursesSection 
+                    data={resumeData.courses || []} 
+                    onChange={(data: any) => updateData('courses', data)} 
                   />
                 </AccordionContent>
               </AccordionItem>

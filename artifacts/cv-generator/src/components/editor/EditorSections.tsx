@@ -405,6 +405,71 @@ export function SkillsSection({ data, onChange }: { data: any[], onChange: (d: a
   );
 }
 
+export function CoursesSection({ data, onChange }: { data: any[], onChange: (d: any[]) => void }) {
+  const handleAdd = () => {
+    onChange([...data, { id: crypto.randomUUID(), name: '', modality: 'Autodidacta', description: '' }]);
+  };
+
+  const handleUpdate = (id: string, field: string, value: any) => {
+    onChange(data.map(item => item.id === id ? { ...item, [field]: value } : item));
+  };
+
+  const handleDelete = (id: string) => {
+    onChange(data.filter(item => item.id !== id));
+  };
+
+  const modalities = ["Autodidacta", "Online", "Presencial", "Semipresencial"];
+
+  return (
+    <div className="space-y-4">
+      {data.map((item) => (
+        <div key={item.id} className="p-4 border rounded-md bg-gray-50/50 relative group">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => handleDelete(item.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs">Nombre del curso</Label>
+              <Input value={item.name} placeholder="ej. Redes de Fibra Óptica" onChange={e => handleUpdate(item.id, 'name', e.target.value)} />
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs">Modalidad</Label>
+              <Select value={item.modality} onValueChange={(val) => handleUpdate(item.id, 'modality', val)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {modalities.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs">Descripción (opcional)</Label>
+              <RichTextEditor
+                value={item.description || ''}
+                onChange={(val) => handleUpdate(item.id, 'description', val)}
+                placeholder="¿Qué aprendiste en este curso?"
+                minHeight="72px"
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+      <Button variant="outline" className="w-full border-dashed" onClick={handleAdd}>
+        <Plus className="mr-2 h-4 w-4" /> Agregar curso
+      </Button>
+    </div>
+  );
+}
+
 export function LanguagesSection({ data, onChange }: { data: any[], onChange: (d: any[]) => void }) {
   const handleAdd = () => {
     onChange([...data, { id: crypto.randomUUID(), language: '', proficiency: 'Básico' }]);
