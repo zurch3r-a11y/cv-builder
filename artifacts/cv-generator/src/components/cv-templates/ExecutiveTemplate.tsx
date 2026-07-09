@@ -1,5 +1,5 @@
 import { TemplateProps } from "./types";
-import { renderDescription, renderInline } from "./render-description";
+import { renderDescription, renderInline, formatDateRange } from "./render-description";
 
 export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages, courses } = data;
@@ -63,7 +63,7 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
                     <div className="flex justify-between items-baseline mb-1">
                       <h3 className="font-bold text-[15px]">{exp.jobTitle}</h3>
                       <span className="opacity-50 font-semibold text-xs uppercase tracking-wider">
-                        {exp.startDate} - {exp.current ? "Actual" : exp.endDate}
+                        {formatDateRange(exp.startDate, exp.endDate, exp.current)}
                       </span>
                     </div>
                     <div className="font-medium mb-1 opacity-70">
@@ -98,7 +98,7 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
                       {renderInline(edu.school)}
                     </div>
                     <span className="opacity-40 text-xs">
-                      {edu.startDate} - {edu.current ? "Actual" : edu.endDate}
+                      {formatDateRange(edu.startDate, edu.endDate, edu.current)}
                     </span>
                   </div>
                 ))}

@@ -1,6 +1,6 @@
 import { Mail, Phone, MapPin, Calendar, Globe, Heart, CreditCard, Link, User } from "lucide-react";
 import { TemplateProps } from "./types";
-import { renderDescription, renderInline } from "./render-description";
+import { renderDescription, renderInline, formatDateRange } from "./render-description";
 
 function formatBirthDate(dateStr: string): string {
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -179,7 +179,7 @@ export function ModernTemplate({ data, accentColor }: TemplateProps) {
                   <div className="flex justify-between items-baseline mb-1">
                     <h3 className="font-bold text-[15px]">{edu.degree} {edu.fieldOfStudy && `en ${edu.fieldOfStudy}`}</h3>
                     <span className="text-gray-500 text-sm whitespace-nowrap ml-4">
-                      {edu.startDate} - {edu.current ? "Actual" : edu.endDate}
+                      {formatDateRange(edu.startDate, edu.endDate, edu.current)}
                     </span>
                   </div>
                   <div className="font-medium mb-1 opacity-75">
@@ -205,7 +205,7 @@ export function ModernTemplate({ data, accentColor }: TemplateProps) {
                   <div className="flex justify-between items-baseline mb-1">
                     <h3 className="font-bold text-[15px]">{exp.jobTitle}</h3>
                     <span className="text-gray-500 text-sm whitespace-nowrap ml-4">
-                      {exp.startDate} - {exp.current ? "Actual" : exp.endDate}
+                      {formatDateRange(exp.startDate, exp.endDate, exp.current)}
                     </span>
                   </div>
                   <div className="font-medium mb-1 opacity-75">

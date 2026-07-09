@@ -1,5 +1,5 @@
 import { TemplateProps } from "./types";
-import { renderDescription, renderInline } from "./render-description";
+import { renderDescription, renderInline, formatDateRange } from "./render-description";
 
 export function ClassicTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages, courses } = data;
@@ -63,7 +63,7 @@ export function ClassicTemplate({ data, accentColor }: TemplateProps) {
                   <div className="flex justify-between items-baseline mb-1">
                     <h3 className="font-bold text-[15px]">{edu.degree} {edu.fieldOfStudy && `en ${edu.fieldOfStudy}`}</h3>
                     <span className="opacity-60 font-medium italic font-serif">
-                      {edu.startDate} - {edu.current ? "Actual" : edu.endDate}
+                      {formatDateRange(edu.startDate, edu.endDate, edu.current)}
                     </span>
                   </div>
                   <div className="font-medium mb-1 uppercase text-xs tracking-wider opacity-60">
@@ -91,7 +91,7 @@ export function ClassicTemplate({ data, accentColor }: TemplateProps) {
                   <div className="flex justify-between items-baseline mb-1">
                     <h3 className="font-bold text-[15px]">{exp.jobTitle}</h3>
                     <span className="opacity-60 font-medium italic font-serif">
-                      {exp.startDate} - {exp.current ? "Actual" : exp.endDate}
+                      {formatDateRange(exp.startDate, exp.endDate, exp.current)}
                     </span>
                   </div>
                   <div className="font-medium mb-1 uppercase text-xs tracking-wider opacity-60">

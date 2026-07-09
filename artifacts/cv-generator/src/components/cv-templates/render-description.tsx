@@ -81,3 +81,25 @@ export function renderInline(text: string, extraClass = "") {
 function stripTags(html: string): string {
   return html.replace(/<[^>]*>/g, "");
 }
+
+/**
+ * Format a start/end date range for display, omitting the "-" separator
+ * entirely when there's nothing to show on one or both sides (e.g. the user
+ * hasn't filled in dates yet). Prevents a stray lone "-" from rendering.
+ */
+/** Treat separator-only placeholders (e.g. a lone "-") as empty. */
+function normalizeDatePart(value?: string | null): string {
+  const trimmed = value?.trim() || "";
+  return /^[-–—]+$/.test(trimmed) ? "" : trimmed;
+}
+
+export function formatDateRange(
+  startDate?: string | null,
+  endDate?: string | null,
+  current?: boolean
+): string {
+  const end = current ? "Actual" : normalizeDatePart(endDate);
+  const start = normalizeDatePart(startDate);
+  if (start && end) return `${start} - ${end}`;
+  return start || end || "";
+}
