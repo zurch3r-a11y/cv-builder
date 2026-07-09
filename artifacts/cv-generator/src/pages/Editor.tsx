@@ -226,22 +226,64 @@ export default function Editor() {
             return css;
           };
 
+          const MODERN_COLOR_RE = /oklch|oklab|lab\(|lch\(|color-mix/i;
+
+          // ── Pass 1: patch <style> textContent ────────────────────────────────
+          // (Belt-and-suspenders for any style tags written by SSR/non-Vite paths.)
           element.ownerDocument.querySelectorAll("style").forEach((s) => {
             s.textContent = patchText(s.textContent ?? "");
           });
 
-          // ── Belt-and-suspenders: normalize computed colors too ──────────────
-          // Modern Chrome can return getComputedStyle() values in the color
-          // space they were declared in (e.g. "oklch(...)") instead of always
-          // resolving to rgb(). html2canvas's own color parser can't read
-          // that, regardless of the stylesheet-text patch above. Walk every
-          // element and force any oklch/oklab/lab/lch/color-mix computed color
-          // onto an inline (highest-specificity) property using a value the
-          // browser itself has already normalized via canvas fillStyle.
+          // ── Pass 2: patch CSSOM rules directly ──────────────────────────────
+          // Changing textContent does NOT always cause the browser to re-parse
+          // stylesheet rules into the CSSOM (they were already compiled). We
+          // must patch the live CSSStyleDeclaration for each rule instead.
+          for (const sheet of Array.from(element.ownerDocument.styleSheets)) {
+            try {
+              const rules = Array.from(sheet.cssRules ?? []);
+              for (const rule of rules) {
+                const style = (rule as CSSStyleRule).style;
+                if (!style) continue;
+                for (const prop of Array.from(style)) {
+                  const val = style.getPropertyValue(prop);
+                  if (MODERN_COLOR_RE.test(val)) {
+                    const patched = patchText(val);
+                    if (patched !== val) {
+                      style.setProperty(prop, patched, style.getPropertyPriority(prop));
+                    }
+                  }
+                }
+              }
+            } catch {
+              // Skip cross-origin or restricted sheets
+            }
+          }
+
+          // ── Pass 3: patch inline style attributes ────────────────────────────
+          // Elements may carry inline style properties (e.g. set by React or JS)
+          // that contain oklch. Patch them before reading computed styles.
+          const allElsInline = [element, ...Array.from(element.querySelectorAll("*"))];
+          allElsInline.forEach((el) => {
+            if (!(el instanceof HTMLElement)) return;
+            for (const prop of Array.from(el.style)) {
+              const val = el.style.getPropertyValue(prop);
+              if (MODERN_COLOR_RE.test(val)) {
+                const patched = patchText(val);
+                if (patched !== val) {
+                  el.style.setProperty(prop, patched, el.style.getPropertyPriority(prop));
+                }
+              }
+            }
+          });
+
+          // ── Pass 4: normalize remaining computed colors via canvas ───────────
+          // After the CSSOM patches above, any residual oklch that survived
+          // (e.g. from inherited or browser-default values) is caught here by
+          // round-tripping each computed color through canvas fillStyle, which
+          // the browser normalizes to rgb()/rgba().
           const win = element.ownerDocument.defaultView ?? window;
           const normCanvas = element.ownerDocument.createElement("canvas");
           const nctx = normCanvas.getContext("2d");
-          const MODERN_COLOR_RE = /oklch|oklab|lab\(|lch\(|color-mix/i;
           // Round-trips a single color value through canvas fillStyle, which
           // the browser normalizes internally to rgb()/rgba()/hex. Verifies
           // the assignment actually took effect (canvas silently ignores
