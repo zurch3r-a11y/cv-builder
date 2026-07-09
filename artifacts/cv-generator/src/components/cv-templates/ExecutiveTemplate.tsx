@@ -109,7 +109,7 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
           {skills && skills.length > 0 && (
             <div>
               <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor }}>
-                Competencias Clave
+                Habilidades
               </h2>
               <div className="flex flex-col gap-2">
                 {skills.map((skill) => (
