@@ -11,7 +11,7 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
       <div className="text-white p-8 flex flex-col items-center justify-center text-center" style={{ backgroundColor: accentColor }}>
         {personalInfo?.photoUrl && (
           <div className="mb-4">
-            <div className="w-24 h-24 rounded-full mx-auto overflow-hidden" style={{ border: "4px solid rgba(255,255,255,0.5)" }}>
+            <div className="w-24 h-24 rounded-full mx-auto overflow-hidden" style={{ border: "4px solid white" }}>
               <img
                 src={personalInfo.photoUrl}
                 alt="Profile"
@@ -139,11 +139,8 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
               </h2>
               <div className="flex flex-col gap-2">
                 {skills.map((skill) => (
-                  <div key={skill.id} className="flex justify-between items-center text-sm">
-                    <span className="font-medium opacity-80">{skill.name}</span>
-                    <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${skill.level}%`, backgroundColor: accentColor }} />
-                    </div>
+                  <div key={skill.id} className="pl-2.5 py-0.5 text-sm" style={{ borderLeft: `3px solid ${accentColor}` }}>
+                    <span className="font-medium opacity-80 leading-snug">{skill.name}</span>
                   </div>
                 ))}
               </div>
