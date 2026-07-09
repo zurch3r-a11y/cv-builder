@@ -229,6 +229,84 @@ export default function Editor() {
           element.ownerDocument.querySelectorAll("style").forEach((s) => {
             s.textContent = patchText(s.textContent ?? "");
           });
+
+          // ── Belt-and-suspenders: normalize computed colors too ──────────────
+          // Modern Chrome can return getComputedStyle() values in the color
+          // space they were declared in (e.g. "oklch(...)") instead of always
+          // resolving to rgb(). html2canvas's own color parser can't read
+          // that, regardless of the stylesheet-text patch above. Walk every
+          // element and force any oklch/oklab/lab/lch/color-mix computed color
+          // onto an inline (highest-specificity) property using a value the
+          // browser itself has already normalized via canvas fillStyle.
+          const win = element.ownerDocument.defaultView ?? window;
+          const normCanvas = element.ownerDocument.createElement("canvas");
+          const nctx = normCanvas.getContext("2d");
+          const MODERN_COLOR_RE = /oklch|oklab|lab\(|lch\(|color-mix/i;
+          // Round-trips a single color value through canvas fillStyle, which
+          // the browser normalizes internally to rgb()/rgba()/hex. Verifies
+          // the assignment actually took effect (canvas silently ignores
+          // invalid values rather than throwing) by seeding a sentinel first
+          // and rejecting both an unchanged result and one that still
+          // contains an unsupported color function.
+          const normalizeColorValue = (val: string): string | null => {
+            if (!nctx || !val) return null;
+            nctx.fillStyle = "#123456";
+            // Compare against the getter's own serialization of the sentinel
+            // (not the literal string), since the browser may normalize it
+            // to a different form (e.g. lowercase, or an equivalent rgb()).
+            const baseline = nctx.fillStyle;
+            try {
+              nctx.fillStyle = val;
+            } catch {
+              return null;
+            }
+            const result = nctx.fillStyle;
+            if (result === baseline) return null;
+            if (MODERN_COLOR_RE.test(result)) return null;
+            return result;
+          };
+          // For simple color properties, the whole computed value is a color.
+          const colorProps = [
+            "color", "background-color",
+            "border-top-color", "border-right-color", "border-bottom-color", "border-left-color",
+            "outline-color", "text-decoration-color", "caret-color", "fill", "stroke",
+          ];
+          // For composite properties, colors are embedded as function tokens
+          // inside a larger value (e.g. "0 1px 2px oklch(...)" for box-shadow,
+          // or "linear-gradient(oklch(...), oklch(...))" for background-image).
+          // Match each token (allowing one level of nested parens, e.g.
+          // color-mix(in oklch, rgb(...) 50%, transparent)) and normalize it
+          // in place.
+          const compositeProps = ["box-shadow", "text-shadow", "background-image"];
+          const TOKEN_RE = /\b(?:oklch|oklab|lab|lch|color-mix)\([^()]*(?:\([^()]*\)[^()]*)*\)/gi;
+          const normalizeComposite = (val: string): string | null => {
+            if (!val || !MODERN_COLOR_RE.test(val)) return null;
+            let changed = false;
+            const result = val.replace(TOKEN_RE, (token) => {
+              const n = normalizeColorValue(token);
+              if (n) {
+                changed = true;
+                return n;
+              }
+              return token;
+            });
+            return changed && !MODERN_COLOR_RE.test(result) ? result : null;
+          };
+          const allEls = [element, ...Array.from(element.querySelectorAll("*"))];
+          allEls.forEach((el) => {
+            if (!(el instanceof HTMLElement) && !(el instanceof SVGElement)) return;
+            const cs = win.getComputedStyle(el);
+            colorProps.forEach((prop) => {
+              const v = cs.getPropertyValue(prop);
+              const n = normalizeColorValue(v);
+              if (n) (el as HTMLElement).style.setProperty(prop, n, "important");
+            });
+            compositeProps.forEach((prop) => {
+              const v = cs.getPropertyValue(prop);
+              const n = normalizeComposite(v);
+              if (n) (el as HTMLElement).style.setProperty(prop, n, "important");
+            });
+          });
         },
       });
 
