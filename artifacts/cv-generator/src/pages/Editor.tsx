@@ -104,8 +104,11 @@ export default function Editor() {
       // A4 at 96 dpi = 794 × 1123 px
       const A4_H_PX = 1123;
       const contentH = container.scrollHeight;
-      // Scale down to fit one page when content is close; let it be multi-page if truly long
-      const scale = contentH <= A4_H_PX * 1.5 ? Math.min(1, A4_H_PX / contentH) : 1;
+      // Only scale down if content overflows by ≤20% — a gentle squeeze that stays
+      // readable. If it's more than 20% over, keep full size and let it paginate
+      // naturally across 2+ pages rather than crushing text into illegibility.
+      const scale = contentH <= A4_H_PX * 1.2 ? Math.min(1, A4_H_PX / contentH) : 1;
+      const isSinglePage = scale < 1 || contentH <= A4_H_PX;
 
       // ── Collect all CSS from the current document ──────────────────────────
       // Vite injects styles as same-origin <style> tags — cssRules is accessible.
@@ -146,8 +149,7 @@ html, body {
   margin: 0;
   padding: 0;
   background: white;
-  /* overflow:hidden prevents a second blank page from trailing whitespace */
-  overflow: hidden;
+  ${isSinglePage ? "overflow: hidden;" : ""}
 }
 body > div {
   /* zoom scales the layout itself (unlike transform) so the browser
