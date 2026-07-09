@@ -358,17 +358,15 @@ export default function Editor() {
       const pageH = 297;
       const imgH = (canvas.height / canvas.width) * pageW;
 
-      // If the content fits — or is close enough that scaling down is preferable
-      // to splitting — render everything on one page. The threshold of 1.5× A4
-      // means content up to ~445 mm tall gets shrunk to fit; beyond that we
-      // split into real pages so text stays legible.
+      // If the content fits — or is close enough — render on one page at full
+      // width. We always use pageW (210 mm) so there are no side margins.
+      // If imgH slightly exceeds pageH the image is compressed a few % vertically;
+      // for text documents this is invisible. Only split into real pages when the
+      // content is genuinely much longer than one A4.
       const SINGLE_PAGE_THRESHOLD = 1.5;
       if (imgH <= pageH * SINGLE_PAGE_THRESHOLD) {
-        const scale = Math.min(1, pageH / imgH);
-        const renderedW = pageW * scale;
-        const renderedH = imgH * scale;
-        const xOffset = (pageW - renderedW) / 2;
-        pdf.addImage(imgData, "JPEG", xOffset, 0, renderedW, renderedH);
+        const renderedH = Math.min(imgH, pageH);
+        pdf.addImage(imgData, "JPEG", 0, 0, pageW, renderedH);
       } else {
         let y = 0;
         while (y < imgH) {
