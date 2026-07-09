@@ -1,5 +1,5 @@
 import { TemplateProps } from "./types";
-import { renderDescription } from "./render-description";
+import { renderDescription, renderInline } from "./render-description";
 
 export function ClassicTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages, courses } = data;
@@ -67,7 +67,7 @@ export function ClassicTemplate({ data, accentColor }: TemplateProps) {
                     </span>
                   </div>
                   <div className="font-medium mb-1 uppercase text-xs tracking-wider opacity-60">
-                    {edu.school} {edu.city && `• ${edu.city}`}
+                    {renderInline(edu.school)} {edu.city && `• ${edu.city}`}
                   </div>
                   {edu.description && (
                     <div className="opacity-75 font-serif">

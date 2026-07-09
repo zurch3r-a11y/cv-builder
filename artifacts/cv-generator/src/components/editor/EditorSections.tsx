@@ -300,7 +300,12 @@ export function EducationSection({ data, onChange }: { data: any[], onChange: (d
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1.5">
               <Label className="text-xs">Escuela / Universidad</Label>
-              <Input value={item.school} onChange={e => handleUpdate(item.id, 'school', e.target.value)} />
+              <RichTextEditor
+                value={item.school}
+                onChange={(val) => handleUpdate(item.id, 'school', val)}
+                placeholder="ej. Universidad Central de Venezuela"
+                minHeight="40px"
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Título</Label>

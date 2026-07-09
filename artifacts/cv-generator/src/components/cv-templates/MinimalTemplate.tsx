@@ -1,5 +1,5 @@
 import { TemplateProps } from "./types";
-import { renderDescription } from "./render-description";
+import { renderDescription, renderInline } from "./render-description";
 
 export function MinimalTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages, courses } = data;
@@ -63,7 +63,7 @@ export function MinimalTemplate({ data, accentColor }: TemplateProps) {
                     </span>
                   </div>
                   <div className="opacity-50 mb-1">
-                    {edu.school} {edu.city && `, ${edu.city}`}
+                    {renderInline(edu.school)} {edu.city && `, ${edu.city}`}
                   </div>
                   {edu.description && (
                     <div className="opacity-70">

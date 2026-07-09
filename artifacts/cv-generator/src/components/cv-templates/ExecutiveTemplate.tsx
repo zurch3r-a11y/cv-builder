@@ -1,5 +1,5 @@
 import { TemplateProps } from "./types";
-import { renderDescription } from "./render-description";
+import { renderDescription, renderInline } from "./render-description";
 
 export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages, courses } = data;
@@ -95,7 +95,7 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
                     <h3 className="font-bold text-sm">{edu.degree}</h3>
                     <div className="text-xs mb-1 opacity-60">{edu.fieldOfStudy}</div>
                     <div className="text-xs mb-1 opacity-50">
-                      {edu.school}
+                      {renderInline(edu.school)}
                     </div>
                     <span className="opacity-40 text-xs">
                       {edu.startDate} - {edu.current ? "Actual" : edu.endDate}

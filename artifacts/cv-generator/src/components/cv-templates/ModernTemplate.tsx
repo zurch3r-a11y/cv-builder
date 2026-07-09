@@ -1,6 +1,6 @@
 import { Mail, Phone, MapPin, Calendar, Globe, Heart, CreditCard, Link, User } from "lucide-react";
 import { TemplateProps } from "./types";
-import { renderDescription } from "./render-description";
+import { renderDescription, renderInline } from "./render-description";
 
 function formatBirthDate(dateStr: string): string {
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -183,7 +183,7 @@ export function ModernTemplate({ data, accentColor }: TemplateProps) {
                     </span>
                   </div>
                   <div className="font-medium mb-1 opacity-75">
-                    {edu.school} {edu.city && `| ${edu.city}`}
+                    {renderInline(edu.school)} {edu.city && `| ${edu.city}`}
                   </div>
                   {edu.description && (
                     <div className="opacity-80">
