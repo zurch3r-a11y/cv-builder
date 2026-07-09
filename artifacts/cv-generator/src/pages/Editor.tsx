@@ -141,14 +141,19 @@ ${cssChunks.join("\n")}
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
-html, body { margin: 0; padding: 0; background: white; }
-@media print {
-  @page { margin: 0; size: A4 portrait; }
-  body > div {
-    transform-origin: top left;
-    transform: scale(${scale.toFixed(4)});
-    width: 794px;
-  }
+@page { margin: 0; size: A4 portrait; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: white;
+  /* overflow:hidden prevents a second blank page from trailing whitespace */
+  overflow: hidden;
+}
+body > div {
+  /* zoom scales the layout itself (unlike transform) so the browser
+     sees the shrunk dimensions when paginating — no second page */
+  zoom: ${scale.toFixed(4)};
+  width: 794px;
 }
 </style>
 </head>
