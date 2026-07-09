@@ -358,11 +358,24 @@ export default function Editor() {
       const pageH = 297;
       const imgH = (canvas.height / canvas.width) * pageW;
 
-      let y = 0;
-      while (y < imgH) {
-        if (y > 0) pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, -y, pageW, imgH);
-        y += pageH;
+      // If the content fits — or is close enough that scaling down is preferable
+      // to splitting — render everything on one page. The threshold of 1.5× A4
+      // means content up to ~445 mm tall gets shrunk to fit; beyond that we
+      // split into real pages so text stays legible.
+      const SINGLE_PAGE_THRESHOLD = 1.5;
+      if (imgH <= pageH * SINGLE_PAGE_THRESHOLD) {
+        const scale = Math.min(1, pageH / imgH);
+        const renderedW = pageW * scale;
+        const renderedH = imgH * scale;
+        const xOffset = (pageW - renderedW) / 2;
+        pdf.addImage(imgData, "JPEG", xOffset, 0, renderedW, renderedH);
+      } else {
+        let y = 0;
+        while (y < imgH) {
+          if (y > 0) pdf.addPage();
+          pdf.addImage(imgData, "JPEG", 0, -y, pageW, imgH);
+          y += pageH;
+        }
       }
 
       const fileName = (title || "cv").replace(/\s+/g, "_").toLowerCase();

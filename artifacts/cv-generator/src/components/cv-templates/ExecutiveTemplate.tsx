@@ -34,10 +34,10 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
           {personalInfo?.phone && (
             <span className="flex items-start gap-1.5 min-w-0"><Phone className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{personalInfo.phone}</span>
           )}
-          {(personalInfo?.locality || personalInfo?.city || personalInfo?.country) && (
+          {(personalInfo?.address || personalInfo?.locality || personalInfo?.city || personalInfo?.country) && (
             <span className="flex items-start gap-1.5 min-w-0 max-w-full">
               <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
-              <span className="break-words">{[personalInfo.locality, personalInfo.city, personalInfo.country].filter(Boolean).join(", ")}</span>
+              <span className="break-words">{[personalInfo.address, personalInfo.locality, personalInfo.city, personalInfo.country].filter(Boolean).join(", ")}</span>
             </span>
           )}
           {personalInfo?.birthDate && (
