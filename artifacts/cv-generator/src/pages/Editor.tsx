@@ -349,6 +349,41 @@ export default function Editor() {
               if (n) (el as HTMLElement).style.setProperty(prop, n, "important");
             });
           });
+
+          // ── Fix SVG currentColor ──────────────────────────────────────────
+          // Lucide icons use stroke="currentColor" / fill="none". html2canvas
+          // doesn't resolve CSS `currentColor` on SVG attributes, so icons
+          // render as filled black squares. We resolve it explicitly by reading
+          // the computed color of the nearest HTML ancestor and stamping it onto
+          // every SVG attribute that still says "currentColor".
+          element.querySelectorAll("svg").forEach((svg) => {
+            // Walk up to the nearest HTML element to get the inherited color.
+            let ancestor: Element | null = svg.parentElement;
+            while (ancestor && !(ancestor instanceof HTMLElement)) {
+              ancestor = ancestor.parentElement;
+            }
+            const inheritedColor = ancestor
+              ? win.getComputedStyle(ancestor as HTMLElement).color
+              : "#000000";
+            const resolvedColor =
+              normalizeColorValue(inheritedColor) || inheritedColor || "#000000";
+
+            svg.querySelectorAll<SVGElement>("*").forEach((node) => {
+              if (node.getAttribute("stroke") === "currentColor") {
+                node.setAttribute("stroke", resolvedColor);
+              }
+              if (node.getAttribute("fill") === "currentColor") {
+                node.setAttribute("fill", resolvedColor);
+              }
+            });
+            // Also resolve on the <svg> root itself
+            if (svg.getAttribute("stroke") === "currentColor") {
+              svg.setAttribute("stroke", resolvedColor);
+            }
+            if (svg.getAttribute("fill") === "currentColor") {
+              svg.setAttribute("fill", resolvedColor);
+            }
+          });
         },
       });
 
