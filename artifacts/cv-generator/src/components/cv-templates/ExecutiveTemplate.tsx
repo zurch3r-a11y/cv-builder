@@ -11,11 +11,13 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
       <div className="text-white p-8 flex flex-col items-center justify-center text-center" style={{ backgroundColor: accentColor }}>
         {personalInfo?.photoUrl && (
           <div className="mb-4">
-            <img
-              src={personalInfo.photoUrl}
-              alt="Profile"
-              className="w-24 h-24 rounded-full object-cover border-4 border-white/40 mx-auto"
-            />
+            <div className="w-24 h-24 rounded-full mx-auto overflow-hidden" style={{ border: "4px solid rgba(255,255,255,0.5)" }}>
+              <img
+                src={personalInfo.photoUrl}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
         )}
         <h1 className="text-4xl font-bold tracking-wider uppercase mb-2">
@@ -26,35 +28,35 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
         </p>
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm opacity-80">
           {personalInfo?.email && (
-            <span className="flex items-start gap-1.5 min-w-0 max-w-full">
-              <Mail className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+            <span className="flex items-center gap-1.5 min-w-0 max-w-full">
+              <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
               <span className="break-all">{personalInfo.email}</span>
             </span>
           )}
           {personalInfo?.phone && (
-            <span className="flex items-start gap-1.5 min-w-0"><Phone className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{personalInfo.phone}</span>
+            <span className="flex items-center gap-1.5 min-w-0"><Phone className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />{personalInfo.phone}</span>
           )}
           {(personalInfo?.address || personalInfo?.locality || personalInfo?.city || personalInfo?.country) && (
-            <span className="flex items-start gap-1.5 min-w-0 max-w-full">
-              <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+            <span className="flex items-center gap-1.5 min-w-0 max-w-full">
+              <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
               <span className="break-words">{[personalInfo.address, personalInfo.locality, personalInfo.city, personalInfo.country].filter(Boolean).join(", ")}</span>
             </span>
           )}
           {personalInfo?.birthDate && (
-            <span className="flex items-start gap-1.5 min-w-0"><Calendar className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{formatBirthDate(personalInfo.birthDate)}</span>
+            <span className="flex items-center gap-1.5 min-w-0"><Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />{formatBirthDate(personalInfo.birthDate)}</span>
           )}
           {personalInfo?.nationality && (
-            <span className="flex items-start gap-1.5 min-w-0"><Globe className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{personalInfo.nationality}</span>
+            <span className="flex items-center gap-1.5 min-w-0"><Globe className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />{personalInfo.nationality}</span>
           )}
           {personalInfo?.maritalStatus && (
-            <span className="flex items-start gap-1.5 min-w-0"><Heart className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{personalInfo.maritalStatus}</span>
+            <span className="flex items-center gap-1.5 min-w-0"><Heart className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />{personalInfo.maritalStatus}</span>
           )}
           {personalInfo?.idNumber && (
-            <span className="flex items-start gap-1.5 min-w-0"><CreditCard className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />C.I: {personalInfo.idNumber}</span>
+            <span className="flex items-center gap-1.5 min-w-0"><CreditCard className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />C.I: {personalInfo.idNumber}</span>
           )}
           {personalInfo?.linkedin && (
-            <span className="flex items-start gap-1.5 min-w-0 max-w-full">
-              <Link className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+            <span className="flex items-center gap-1.5 min-w-0 max-w-full">
+              <Link className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
               <span className="break-all">{personalInfo.linkedin}</span>
             </span>
           )}
