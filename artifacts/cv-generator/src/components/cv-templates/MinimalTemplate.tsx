@@ -88,7 +88,7 @@ export function MinimalTemplate({ data, accentColor }: TemplateProps) {
                       {formatDateRange(exp.startDate, exp.endDate, exp.current)}
                     </span>
                   </div>
-                  <div className="opacity-50 mb-1">
+                  <div className="font-medium italic mb-1 opacity-75">
                     {exp.employer} {exp.city && `, ${exp.city}`}
                   </div>
                   {exp.description && (

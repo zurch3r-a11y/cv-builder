@@ -92,7 +92,7 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
                         {formatDateRange(exp.startDate, exp.endDate, exp.current)}
                       </span>
                     </div>
-                    <div className="font-medium mb-1 opacity-70">
+                    <div className="font-semibold italic mb-1 opacity-90">
                       {exp.employer} {exp.city && `| ${exp.city}`}
                     </div>
                     {exp.description && (
