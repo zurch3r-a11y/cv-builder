@@ -1,16 +1,6 @@
 import { Mail, Phone, MapPin, Calendar, Globe, Heart, CreditCard, Link, User } from "lucide-react";
 import { TemplateProps } from "./types";
-import { renderDescription, renderInline, formatDateRange } from "./render-description";
-
-function formatBirthDate(dateStr: string): string {
-  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  const [year, month, day] = parts;
-  const m = parseInt(month, 10);
-  if (m < 1 || m > 12) return dateStr;
-  return `${parseInt(day, 10)} de ${meses[m - 1]} de ${year}`;
-}
+import { renderDescription, renderInline, formatDateRange, formatBirthDate } from "./render-description";
 
 export function ModernTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages, courses } = data;

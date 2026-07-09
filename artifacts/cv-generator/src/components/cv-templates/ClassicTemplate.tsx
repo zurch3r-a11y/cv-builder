@@ -1,5 +1,5 @@
 import { TemplateProps } from "./types";
-import { renderDescription, renderInline, formatDateRange } from "./render-description";
+import { renderDescription, renderInline, formatDateRange, formatBirthDate } from "./render-description";
 
 export function ClassicTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages, courses } = data;
@@ -31,7 +31,7 @@ export function ClassicTemplate({ data, accentColor }: TemplateProps) {
           {(personalInfo?.locality || personalInfo?.city || personalInfo?.country) && (
             <><span className="opacity-40">•</span><span>{[personalInfo.locality, personalInfo.city, personalInfo.country].filter(Boolean).join(", ")}</span></>
           )}
-          {personalInfo?.birthDate && <><span className="opacity-40">•</span><span>{personalInfo.birthDate}</span></>}
+          {personalInfo?.birthDate && <><span className="opacity-40">•</span><span>{formatBirthDate(personalInfo.birthDate)}</span></>}
           {personalInfo?.nationality && <><span className="opacity-40">•</span><span>{personalInfo.nationality}</span></>}
           {personalInfo?.maritalStatus && <><span className="opacity-40">•</span><span>{personalInfo.maritalStatus}</span></>}
           {personalInfo?.idNumber && <><span className="opacity-40">•</span><span>C.I: {personalInfo.idNumber}</span></>}

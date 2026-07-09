@@ -93,6 +93,18 @@ function normalizeDatePart(value?: string | null): string {
   return /^[-–—]+$/.test(trimmed) ? "" : trimmed;
 }
 
+/** Format a "YYYY-MM-DD" birth date as "D de <mes> de YYYY"; falls back to the raw string if unparseable. */
+export function formatBirthDate(dateStr?: string | null): string {
+  if (!dateStr) return "";
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const [year, month, day] = parts;
+  const m = parseInt(month, 10);
+  if (m < 1 || m > 12) return dateStr;
+  return `${parseInt(day, 10)} de ${meses[m - 1]} de ${year}`;
+}
+
 export function formatDateRange(
   startDate?: string | null,
   endDate?: string | null,

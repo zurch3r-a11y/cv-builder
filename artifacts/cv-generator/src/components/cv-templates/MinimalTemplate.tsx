@@ -1,5 +1,5 @@
 import { TemplateProps } from "./types";
-import { renderDescription, renderInline, formatDateRange } from "./render-description";
+import { renderDescription, renderInline, formatDateRange, formatBirthDate } from "./render-description";
 
 export function MinimalTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages, courses } = data;
@@ -32,7 +32,7 @@ export function MinimalTemplate({ data, accentColor }: TemplateProps) {
           {(personalInfo?.locality || personalInfo?.city || personalInfo?.country) && (
             <span>{[personalInfo.locality, personalInfo.city, personalInfo.country].filter(Boolean).join(", ")}</span>
           )}
-          {personalInfo?.birthDate && <span>{personalInfo.birthDate}</span>}
+          {personalInfo?.birthDate && <span>{formatBirthDate(personalInfo.birthDate)}</span>}
           {personalInfo?.nationality && <span>{personalInfo.nationality}</span>}
           {personalInfo?.maritalStatus && <span>{personalInfo.maritalStatus}</span>}
           {personalInfo?.idNumber && <span>C.I: {personalInfo.idNumber}</span>}
