@@ -1,8 +1,10 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
+import { Color } from "@tiptap/extension-color";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { useEffect, useCallback, useState, useRef } from "react";
 import {
   Bold,
@@ -16,16 +18,87 @@ import {
   AlignRight,
   AlignJustify,
   ChevronDown,
+  Baseline,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface RichTextEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-  minHeight?: string;
+// ── Custom FontSize extension ────────────────────────────────────────────────
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    fontSize: {
+      setFontSize: (size: string) => ReturnType;
+      unsetFontSize: () => ReturnType;
+    };
+  }
 }
+
+const FontSize = Extension.create({
+  name: "fontSize",
+  addOptions() {
+    return { types: ["textStyle"] };
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (el) =>
+              (el as HTMLElement).style.fontSize || null,
+            renderHTML: (attrs) => {
+              if (!attrs.fontSize) return {};
+              return { style: `font-size: ${attrs.fontSize}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setFontSize:
+        (fontSize: string) =>
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontSize }).run(),
+      unsetFontSize:
+        () =>
+        ({ chain }) =>
+          chain()
+            .setMark("textStyle", { fontSize: null })
+            .run(),
+    };
+  },
+});
+
+// ── Constants ────────────────────────────────────────────────────────────────
+const FONT_SIZES = [
+  { label: "10", value: "10px" },
+  { label: "11", value: "11px" },
+  { label: "12", value: "12px" },
+  { label: "13", value: "13px" },
+  { label: "14", value: "14px" },
+  { label: "16", value: "16px" },
+  { label: "18", value: "18px" },
+  { label: "20", value: "20px" },
+  { label: "24", value: "24px" },
+  { label: "28", value: "28px" },
+  { label: "32", value: "32px" },
+];
+
+const COLOR_PALETTE = [
+  // Row 1 – neutrals
+  "#000000", "#374151", "#6b7280", "#d1d5db",
+  // Row 2 – warm
+  "#dc2626", "#ea580c", "#d97706", "#ca8a04",
+  // Row 3 – cool
+  "#16a34a", "#0891b2", "#2563eb", "#7c3aed",
+  // Row 4 – vivid
+  "#db2777", "#e11d48", "#059669", "#0284c7",
+];
+
+// ── Small sub-components ─────────────────────────────────────────────────────
+const Divider = () => <div className="w-px h-4 bg-gray-200 mx-0.5 shrink-0" />;
 
 const ToolbarBtn = ({
   active,
@@ -46,7 +119,7 @@ const ToolbarBtn = ({
       onClick();
     }}
     className={cn(
-      "h-7 w-7 flex items-center justify-center rounded transition-colors text-sm",
+      "h-7 w-7 flex items-center justify-center rounded transition-colors text-sm shrink-0",
       active
         ? "bg-primary text-primary-foreground"
         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -56,6 +129,16 @@ const ToolbarBtn = ({
   </button>
 );
 
+// ── Props ────────────────────────────────────────────────────────────────────
+interface RichTextEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  minHeight?: string;
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export function RichTextEditor({
   value,
   onChange,
@@ -64,7 +147,9 @@ export function RichTextEditor({
   minHeight = "80px",
 }: RichTextEditorProps) {
   const [alignOpen, setAlignOpen] = useState(false);
+  const [colorOpen, setColorOpen] = useState(false);
   const alignRef = useRef<HTMLDivElement>(null);
+  const colorRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -75,8 +160,6 @@ export function RichTextEditor({
         horizontalRule: false,
         code: false,
         strike: false,
-        // StarterKit v3 bundles underline and link — disable them here
-        // so our explicit instances below don't conflict.
         underline: false,
         link: false,
       }),
@@ -86,6 +169,9 @@ export function RichTextEditor({
         openOnClick: false,
         HTMLAttributes: { class: "text-blue-600 underline" },
       }),
+      TextStyle,
+      Color,
+      FontSize,
     ],
     content: value || "",
     editorProps: {
@@ -106,7 +192,7 @@ export function RichTextEditor({
     },
   });
 
-  // Sync external value changes (e.g., initial load from DB)
+  // Sync external value changes
   const lastExternalValue = useRef(value);
   useEffect(() => {
     if (!editor) return;
@@ -114,17 +200,17 @@ export function RichTextEditor({
     lastExternalValue.current = value;
     const current = editor.isEmpty ? "" : editor.getHTML();
     if (current !== value) {
-      // setContent(content, emitUpdate) — boolean is valid in TipTap v2
       editor.commands.setContent(value || "");
     }
   }, [editor, value]);
 
-  // Close alignment dropdown when clicking outside
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (alignRef.current && !alignRef.current.contains(e.target as Node)) {
+      if (alignRef.current && !alignRef.current.contains(e.target as Node))
         setAlignOpen(false);
-      }
+      if (colorRef.current && !colorRef.current.contains(e.target as Node))
+        setColorOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -141,6 +227,10 @@ export function RichTextEditor({
       editor.chain().focus().setLink({ href: url }).run();
     }
   }, [editor]);
+
+  // Detect current font size from selection
+  const currentFontSize =
+    (editor?.getAttributes("textStyle")?.fontSize as string | undefined) ?? "";
 
   const currentAlign = editor?.isActive({ textAlign: "center" })
     ? "center"
@@ -159,12 +249,43 @@ export function RichTextEditor({
           ? AlignJustify
           : AlignLeft;
 
+  // Current text color
+  const currentColor =
+    (editor?.getAttributes("textStyle")?.color as string | undefined) ?? "";
+
   if (!editor) return null;
 
   return (
     <div className={cn("border rounded-md overflow-hidden bg-white", className)}>
-      {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b bg-gray-50">
+      {/* ── Toolbar ──────────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b bg-gray-50">
+
+        {/* Font size */}
+        <select
+          title="Tamaño de fuente"
+          value={currentFontSize}
+          onMouseDown={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            const size = e.target.value;
+            if (size) {
+              editor.chain().focus().setFontSize(size).run();
+            } else {
+              editor.chain().focus().unsetFontSize().run();
+            }
+          }}
+          className="h-7 w-16 text-xs border border-gray-200 rounded bg-white text-gray-700 px-1 cursor-pointer hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
+        >
+          <option value="">Tam.</option>
+          {FONT_SIZES.map(({ label, value: v }) => (
+            <option key={v} value={v}>
+              {label}
+            </option>
+          ))}
+        </select>
+
+        <Divider />
+
+        {/* Bold / Italic / Underline */}
         <ToolbarBtn
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -189,8 +310,67 @@ export function RichTextEditor({
           <UnderlineIcon className="h-3.5 w-3.5" />
         </ToolbarBtn>
 
-        <div className="w-px h-4 bg-gray-200 mx-1" />
+        <Divider />
 
+        {/* Text color */}
+        <div className="relative shrink-0" ref={colorRef}>
+          <button
+            type="button"
+            title="Color de texto"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setColorOpen((o) => !o);
+            }}
+            className="h-7 w-7 flex flex-col items-center justify-center gap-0.5 rounded text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+          >
+            <Baseline className="h-3.5 w-3.5" />
+            {/* Color indicator bar */}
+            <div
+              className="w-4 h-1 rounded-sm"
+              style={{ backgroundColor: currentColor || "#000000" }}
+            />
+          </button>
+
+          {colorOpen && (
+            <div className="absolute left-0 top-full mt-1 z-50 bg-white border rounded-md shadow-lg p-2">
+              <div className="grid grid-cols-4 gap-1 mb-1.5">
+                {COLOR_PALETTE.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    title={color}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      editor.chain().focus().setColor(color).run();
+                      setColorOpen(false);
+                    }}
+                    className={cn(
+                      "w-6 h-6 rounded border border-gray-200 transition-transform hover:scale-110",
+                      currentColor === color && "ring-2 ring-primary ring-offset-1"
+                    )}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+              {/* Remove color */}
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  editor.chain().focus().unsetColor().run();
+                  setColorOpen(false);
+                }}
+                className="w-full text-[10px] text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded py-0.5 transition-colors"
+              >
+                Sin color
+              </button>
+            </div>
+          )}
+        </div>
+
+        <Divider />
+
+        {/* Link */}
         <ToolbarBtn
           active={editor.isActive("link")}
           onClick={setLink}
@@ -199,8 +379,9 @@ export function RichTextEditor({
           <LinkIcon className="h-3.5 w-3.5" />
         </ToolbarBtn>
 
-        <div className="w-px h-4 bg-gray-200 mx-1" />
+        <Divider />
 
+        {/* Lists */}
         <ToolbarBtn
           active={editor.isActive("bulletList")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -217,10 +398,10 @@ export function RichTextEditor({
           <ListOrdered className="h-3.5 w-3.5" />
         </ToolbarBtn>
 
-        <div className="w-px h-4 bg-gray-200 mx-1" />
+        <Divider />
 
-        {/* Alignment dropdown */}
-        <div className="relative" ref={alignRef}>
+        {/* Alignment */}
+        <div className="relative shrink-0" ref={alignRef}>
           <button
             type="button"
             title="Alineación de texto"

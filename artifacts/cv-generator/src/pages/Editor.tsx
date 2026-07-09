@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import { useParams, useLocation } from "wouter";
-import { ArrowLeft, Loader2, Save, Download, Type } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { Link } from "wouter";
@@ -27,7 +27,7 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CVPreview } from "@/components/CVPreview";
 import { ModernTemplate, ClassicTemplate, MinimalTemplate, ExecutiveTemplate } from "@/components/cv-templates";
-import { TEMPLATES, ACCENT_COLORS, TEXT_COLORS } from "@/lib/constants";
+import { TEMPLATES, ACCENT_COLORS } from "@/lib/constants";
 
 import { 
   PersonalInfoSection, 
@@ -58,7 +58,6 @@ export default function Editor() {
   const [title, setTitle] = useState("");
   const [template, setTemplate] = useState("");
   const [accentColor, setAccentColor] = useState("");
-  const [textColor, setTextColor] = useState("#111827");
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
   
   // Save State
@@ -68,8 +67,8 @@ export default function Editor() {
   
   // Initialization Guard
   const initializedForId = useRef<number | null>(null);
-  const lastSavedData = useRef<{ title: string, template: string, accentColor: string, textColor: string, data: ResumeData | null }>({
-    title: "", template: "", accentColor: "", textColor: "", data: null
+  const lastSavedData = useRef<{ title: string, template: string, accentColor: string, data: ResumeData | null }>({
+    title: "", template: "", accentColor: "", data: null
   });
   const mutateFnRef = useRef(updateResume.mutate);
 
@@ -90,7 +89,7 @@ export default function Editor() {
       "position:absolute;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;overflow:visible;";
     document.body.appendChild(container);
 
-    const TemplateMap: Record<string, React.ComponentType<{ data: ResumeData; accentColor: string; textColor?: string }>> = {
+    const TemplateMap: Record<string, React.ComponentType<{ data: ResumeData; accentColor: string }>> = {
       modern: ModernTemplate,
       classic: ClassicTemplate,
       minimal: MinimalTemplate,
@@ -100,7 +99,7 @@ export default function Editor() {
 
     const root = createRoot(container);
     root.render(
-      <TemplateComponent data={resumeData} accentColor={accentColor} textColor={textColor} />
+      <TemplateComponent data={resumeData} accentColor={accentColor} />
     );
 
     // Give React a moment to paint
@@ -255,7 +254,7 @@ export default function Editor() {
       document.body.removeChild(container);
       setPdfLoading(false);
     }
-  }, [resumeData, template, accentColor, textColor, title, toast]);
+  }, [resumeData, template, accentColor, title, toast]);
 
   // Init Data from Server
   useEffect(() => {
@@ -264,16 +263,12 @@ export default function Editor() {
       setTitle(resume.title);
       setTemplate(resume.template);
       setAccentColor(resume.accentColor);
-      // textColor is persisted in localStorage (not the API) since it's a UI preference
-      const storedTextColor = localStorage.getItem(`cv-textColor-${resumeId}`);
-      setTextColor(storedTextColor || "#111827");
       setResumeData(resume.data);
       
       lastSavedData.current = {
         title: resume.title,
         template: resume.template,
         accentColor: resume.accentColor,
-        textColor: storedTextColor || "#111827",
         data: JSON.parse(JSON.stringify(resume.data))
       };
     }
@@ -301,7 +296,7 @@ export default function Editor() {
   const triggerSave = useCallback(() => {
     if (!resumeData || !title || !template || !accentColor) return;
     
-    const currentSnapshot = JSON.stringify({ title, template, accentColor, textColor, data: resumeData });
+    const currentSnapshot = JSON.stringify({ title, template, accentColor, data: resumeData });
     const lastSavedSnapshot = JSON.stringify(lastSavedData.current);
     
     if (currentSnapshot === lastSavedSnapshot) return;
@@ -318,7 +313,7 @@ export default function Editor() {
           setSaveStatus("saved");
           
           lastSavedData.current = {
-            title, template, accentColor, textColor, data: JSON.parse(JSON.stringify(resumeData))
+            title, template, accentColor, data: JSON.parse(JSON.stringify(resumeData))
           };
 
           queryClient.setQueryData(getGetResumeQueryKey(resumeId), updatedResume);
@@ -336,13 +331,7 @@ export default function Editor() {
         }
       }
     );
-  }, [resumeId, title, template, accentColor, textColor, resumeData, queryClient, toast]);
-
-  // Persist textColor to localStorage whenever it changes
-  useEffect(() => {
-    if (initializedForId.current !== resumeId) return;
-    localStorage.setItem(`cv-textColor-${resumeId}`, textColor);
-  }, [textColor, resumeId]);
+  }, [resumeId, title, template, accentColor, resumeData, queryClient, toast]);
 
   // Debounce effect
   useEffect(() => {
@@ -359,7 +348,7 @@ export default function Editor() {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [resumeData, title, template, accentColor, textColor, resumeId, triggerSave]);
+  }, [resumeData, title, template, accentColor, resumeId, triggerSave]);
 
   const updateData = (section: keyof ResumeData, payload: any) => {
     setResumeData(prev => prev ? { ...prev, [section]: payload } : null);
@@ -417,24 +406,6 @@ export default function Editor() {
                   className={`w-5 h-5 rounded-full border border-black/10 transition-transform ${accentColor === c.value ? 'scale-125 ring-1 ring-offset-1 ring-primary' : 'hover:scale-110'}`}
                   style={{ backgroundColor: c.value }}
                   onClick={() => setAccentColor(c.value)}
-                  title={c.name}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Text color picker */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-muted-foreground font-medium uppercase text-xs tracking-wider flex items-center gap-1">
-              <Type className="h-3 w-3" /> Texto:
-            </span>
-            <div className="flex gap-1">
-              {TEXT_COLORS.map(c => (
-                <button
-                  key={c.value}
-                  className={`w-5 h-5 rounded-full border border-black/10 transition-transform ${textColor === c.value ? 'scale-125 ring-1 ring-offset-1 ring-primary' : 'hover:scale-110'}`}
-                  style={{ backgroundColor: c.value }}
-                  onClick={() => setTextColor(c.value)}
                   title={c.name}
                 />
               ))}
@@ -535,7 +506,6 @@ export default function Editor() {
             data={resumeData} 
             template={template} 
             accentColor={accentColor}
-            textColor={textColor}
           />
         </div>
       </div>

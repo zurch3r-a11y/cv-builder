@@ -1,11 +1,11 @@
 import { TemplateProps } from "./types";
 import { renderDescription } from "./render-description";
 
-export function ExecutiveTemplate({ data, accentColor, textColor = '#111827' }: TemplateProps) {
+export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages } = data;
 
   return (
-    <div className="w-full bg-white font-sans text-[13px] leading-relaxed flex flex-col" style={{ color: textColor }}>
+    <div className="w-full bg-white font-sans text-[13px] leading-relaxed flex flex-col text-gray-800">
       {/* Bold Header */}
       <div className="text-white p-8 flex flex-col items-center justify-center text-center" style={{ backgroundColor: accentColor }}>
         {personalInfo?.photoUrl && (
@@ -43,7 +43,7 @@ export function ExecutiveTemplate({ data, accentColor, textColor = '#111827' }: 
         <div className="flex-1 flex flex-col gap-5">
           {personalInfo?.summary && (
             <div>
-              <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: textColor }}>
+              <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor }}>
                 Resumen Ejecutivo
               </h2>
               <div className="opacity-80">
@@ -54,7 +54,7 @@ export function ExecutiveTemplate({ data, accentColor, textColor = '#111827' }: 
 
           {workExperience && workExperience.length > 0 && (
             <div>
-              <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-4" style={{ borderColor: accentColor, color: textColor }}>
+              <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-4" style={{ borderColor: accentColor }}>
                 Experiencia Profesional
               </h2>
               <div className="flex flex-col gap-4">
@@ -86,7 +86,7 @@ export function ExecutiveTemplate({ data, accentColor, textColor = '#111827' }: 
 
           {education && education.length > 0 && (
             <div>
-              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: textColor }}>
+              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor }}>
                 Educación
               </h2>
               <div className="flex flex-col gap-3">
@@ -108,7 +108,7 @@ export function ExecutiveTemplate({ data, accentColor, textColor = '#111827' }: 
 
           {skills && skills.length > 0 && (
             <div>
-              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: textColor }}>
+              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor }}>
                 Competencias Clave
               </h2>
               <div className="flex flex-col gap-2">
@@ -126,7 +126,7 @@ export function ExecutiveTemplate({ data, accentColor, textColor = '#111827' }: 
 
           {languages && languages.length > 0 && (
             <div>
-              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor, color: textColor }}>
+              <h2 className="text-lg font-bold uppercase border-b-2 pb-1 mb-3" style={{ borderColor: accentColor }}>
                 Idiomas
               </h2>
               <div className="flex flex-col gap-2">

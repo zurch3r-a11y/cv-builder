@@ -12,11 +12,11 @@ function formatBirthDate(dateStr: string): string {
   return `${parseInt(day, 10)} de ${meses[m - 1]} de ${year}`;
 }
 
-export function ModernTemplate({ data, accentColor, textColor = '#111827' }: TemplateProps) {
+export function ModernTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages } = data;
 
   return (
-    <div className="w-full flex flex-row bg-white font-sans text-[13px] leading-relaxed" style={{ color: textColor }}>
+    <div className="w-full flex flex-row bg-white font-sans text-[13px] leading-relaxed text-gray-800">
       {/* Left Sidebar */}
       <div
         className="w-[32%] text-white p-8"
@@ -147,7 +147,7 @@ export function ModernTemplate({ data, accentColor, textColor = '#111827' }: Tem
         {personalInfo?.summary && (
           <div className="mb-6">
             <h2 className="text-xl font-bold uppercase tracking-wider pb-2 mb-3 border-b border-gray-200" style={{ color: accentColor }}>Perfil</h2>
-            <div style={{ color: textColor }}>
+            <div>
               {renderDescription(personalInfo.summary)}
             </div>
           </div>
@@ -160,7 +160,7 @@ export function ModernTemplate({ data, accentColor, textColor = '#111827' }: Tem
               {education.map((edu) => (
                 <div key={edu.id}>
                   <div className="flex justify-between items-baseline mb-1">
-                    <h3 className="font-bold text-[15px]" style={{ color: textColor }}>{edu.degree} {edu.fieldOfStudy && `en ${edu.fieldOfStudy}`}</h3>
+                    <h3 className="font-bold text-[15px]">{edu.degree} {edu.fieldOfStudy && `en ${edu.fieldOfStudy}`}</h3>
                     <span className="text-gray-500 text-sm whitespace-nowrap ml-4">
                       {edu.startDate} - {edu.current ? "Actual" : edu.endDate}
                     </span>
@@ -186,7 +186,7 @@ export function ModernTemplate({ data, accentColor, textColor = '#111827' }: Tem
               {workExperience.map((exp) => (
                 <div key={exp.id}>
                   <div className="flex justify-between items-baseline mb-1">
-                    <h3 className="font-bold text-[15px]" style={{ color: textColor }}>{exp.jobTitle}</h3>
+                    <h3 className="font-bold text-[15px]">{exp.jobTitle}</h3>
                     <span className="text-gray-500 text-sm whitespace-nowrap ml-4">
                       {exp.startDate} - {exp.current ? "Actual" : exp.endDate}
                     </span>

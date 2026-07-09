@@ -6,21 +6,20 @@ interface CVPreviewProps {
   data: ResumeData;
   template: string;
   accentColor: string;
-  textColor?: string;
 }
 
-export function CVPreview({ data, template, accentColor, textColor }: CVPreviewProps) {
+export function CVPreview({ data, template, accentColor }: CVPreviewProps) {
   const getTemplate = () => {
     switch (template) {
       case "classic":
-        return <ClassicTemplate data={data} accentColor={accentColor} textColor={textColor} />;
+        return <ClassicTemplate data={data} accentColor={accentColor} />;
       case "minimal":
-        return <MinimalTemplate data={data} accentColor={accentColor} textColor={textColor} />;
+        return <MinimalTemplate data={data} accentColor={accentColor} />;
       case "executive":
-        return <ExecutiveTemplate data={data} accentColor={accentColor} textColor={textColor} />;
+        return <ExecutiveTemplate data={data} accentColor={accentColor} />;
       case "modern":
       default:
-        return <ModernTemplate data={data} accentColor={accentColor} textColor={textColor} />;
+        return <ModernTemplate data={data} accentColor={accentColor} />;
     }
   };
 

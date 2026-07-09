@@ -1,11 +1,11 @@
 import { TemplateProps } from "./types";
 import { renderDescription } from "./render-description";
 
-export function MinimalTemplate({ data, accentColor, textColor = '#111827' }: TemplateProps) {
+export function MinimalTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages } = data;
 
   return (
-    <div className="w-full bg-white font-sans p-12 text-[13px] leading-relaxed" style={{ color: textColor }}>
+    <div className="w-full bg-white font-sans p-12 text-[13px] leading-relaxed text-gray-800">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-6 mb-4">
@@ -17,7 +17,7 @@ export function MinimalTemplate({ data, accentColor, textColor = '#111827' }: Te
             />
           )}
           <div>
-            <h1 className="text-3xl font-medium tracking-tight mb-1" style={{ color: textColor }}>
+            <h1 className="text-3xl font-medium tracking-tight mb-1">
               {personalInfo?.firstName} <span style={{ color: accentColor }}>{personalInfo?.lastName}</span>
             </h1>
             <p className="text-sm tracking-wide uppercase opacity-50">

@@ -1,11 +1,11 @@
 import { TemplateProps } from "./types";
 import { renderDescription } from "./render-description";
 
-export function ClassicTemplate({ data, accentColor, textColor = '#111827' }: TemplateProps) {
+export function ClassicTemplate({ data, accentColor }: TemplateProps) {
   const { personalInfo, workExperience, education, skills, languages } = data;
 
   return (
-    <div className="w-full bg-white font-serif p-10 text-[14px] leading-relaxed" style={{ color: textColor }}>
+    <div className="w-full bg-white font-serif p-10 text-[14px] leading-relaxed text-gray-800">
       {/* Header */}
       <div className="border-b-4 pb-5 mb-5" style={{ borderColor: accentColor }}>
         {personalInfo?.photoUrl && (
@@ -18,7 +18,7 @@ export function ClassicTemplate({ data, accentColor, textColor = '#111827' }: Te
             />
           </div>
         )}
-        <h1 className="text-4xl font-bold uppercase text-center mb-2 tracking-widest" style={{ color: textColor }}>
+        <h1 className="text-4xl font-bold uppercase text-center mb-2 tracking-widest">
           {personalInfo?.firstName} {personalInfo?.lastName}
         </h1>
         <p className="text-lg text-center italic opacity-60 mb-3">

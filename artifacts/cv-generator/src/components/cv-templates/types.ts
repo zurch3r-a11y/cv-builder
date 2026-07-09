@@ -3,7 +3,6 @@ import { ResumeData } from "@workspace/api-client-react";
 export interface TemplateProps {
   data: ResumeData;
   accentColor: string;
-  textColor?: string;
 }
 
 export const defaultResumeData: ResumeData = {
