@@ -1,3 +1,4 @@
+import { Mail, Phone, MapPin, Calendar, Globe, Heart, CreditCard, Link } from "lucide-react";
 import { TemplateProps } from "./types";
 import { renderDescription, renderInline, formatDateRange, formatBirthDate } from "./render-description";
 
@@ -24,16 +25,39 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
           {personalInfo?.jobTitle}
         </p>
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm opacity-80">
-          {personalInfo?.email && <span>{personalInfo.email}</span>}
-          {personalInfo?.phone && <span>{personalInfo.phone}</span>}
-          {(personalInfo?.locality || personalInfo?.city || personalInfo?.country) && (
-            <span>{[personalInfo.locality, personalInfo.city, personalInfo.country].filter(Boolean).join(", ")}</span>
+          {personalInfo?.email && (
+            <span className="flex items-start gap-1.5 min-w-0 max-w-full">
+              <Mail className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+              <span className="break-all">{personalInfo.email}</span>
+            </span>
           )}
-          {personalInfo?.birthDate && <span>{formatBirthDate(personalInfo.birthDate)}</span>}
-          {personalInfo?.nationality && <span>{personalInfo.nationality}</span>}
-          {personalInfo?.maritalStatus && <span>{personalInfo.maritalStatus}</span>}
-          {personalInfo?.idNumber && <span>C.I: {personalInfo.idNumber}</span>}
-          {personalInfo?.linkedin && <span>{personalInfo.linkedin}</span>}
+          {personalInfo?.phone && (
+            <span className="flex items-start gap-1.5 min-w-0"><Phone className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{personalInfo.phone}</span>
+          )}
+          {(personalInfo?.locality || personalInfo?.city || personalInfo?.country) && (
+            <span className="flex items-start gap-1.5 min-w-0 max-w-full">
+              <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+              <span className="break-words">{[personalInfo.locality, personalInfo.city, personalInfo.country].filter(Boolean).join(", ")}</span>
+            </span>
+          )}
+          {personalInfo?.birthDate && (
+            <span className="flex items-start gap-1.5 min-w-0"><Calendar className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{formatBirthDate(personalInfo.birthDate)}</span>
+          )}
+          {personalInfo?.nationality && (
+            <span className="flex items-start gap-1.5 min-w-0"><Globe className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{personalInfo.nationality}</span>
+          )}
+          {personalInfo?.maritalStatus && (
+            <span className="flex items-start gap-1.5 min-w-0"><Heart className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{personalInfo.maritalStatus}</span>
+          )}
+          {personalInfo?.idNumber && (
+            <span className="flex items-start gap-1.5 min-w-0"><CreditCard className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />C.I: {personalInfo.idNumber}</span>
+          )}
+          {personalInfo?.linkedin && (
+            <span className="flex items-start gap-1.5 min-w-0 max-w-full">
+              <Link className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+              <span className="break-all">{personalInfo.linkedin}</span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -55,7 +79,7 @@ export function ExecutiveTemplate({ data, accentColor }: TemplateProps) {
           {workExperience && workExperience.length > 0 && (
             <div>
               <h2 className="text-xl font-bold uppercase border-b-2 pb-1 mb-4" style={{ borderColor: accentColor }}>
-                Experiencia Profesional
+                Experiencia Laboral
               </h2>
               <div className="flex flex-col gap-4">
                 {workExperience.map((exp) => (
